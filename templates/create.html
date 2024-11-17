@@ -1,0 +1,25 @@
+{% extends 'base.html'%}
+
+{% block title %}
+Sign up
+{% endblock %}
+
+{% block body %}
+<div class="form-container">
+    {% if error_message %}
+    <div class="alert alert-danger">{{ error_message }}</div>
+    {% endif %}
+    <form method="POST" class="styled-form">
+        <input type="text" name="username" placeholder="LOGIN" class="form-control" value="{{ username }}" required
+            style="color: black;">
+        <input type="email" name="email" placeholder="EMAIL" class="form-control" value="{{ email }}" required
+            style="color: black;">
+        <input type="password" name="password" placeholder="PASSWORD" class="form-control" required
+            style="color: black;">
+        <input type="password" name="confirm_password" placeholder="CONFIRM PASSWORD" class="form-control" required
+            style="color: black;">
+        <button type="submit" class="btn btn-primary-form">Sign Up</button>
+    </form>
+</div>
+
+{% endblock %}

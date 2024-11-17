@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Article{% endblock %}
+
+{% block body %}
+<h1>Edit Article</h1>
+<form method="POST" class="styled-form">
+    <input type="text" class="form-control" name="title" placeholder="Title" required value="{{ article.title }}"
+        style="color: black;">
+    <textarea name="content" class="form-control" placeholder="Content" required
+        style="color: black;">{{ article.content }}</textarea>
+    <button type="submit" class="btn btn-primary-form">Save Changes</button>
+</form>
+{% endblock %}
