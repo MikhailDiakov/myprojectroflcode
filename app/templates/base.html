@@ -24,24 +24,21 @@
             </div>
 
             <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
-                <li><a href="{{ url_for('index') }}" class="nav-link px-2 ">Home</a></li>
-                <li><a href="{{ url_for('about') }}" class="nav-link px-2">About</a></li>
-                <li><a href="{{ url_for('articles') }}" class="nav-link px-2">Articles</a></li>
+                <li><a href="{{ url_for('main.index') }}" class="nav-link px-2">Home</a></li>
+                <li><a href="{{ url_for('main.about') }}" class="nav-link px-2">About</a></li>
+                <li><a href="{{ url_for('articles.articles') }}" class="nav-link px-2">Articles</a></li>
             </ul>
-
             <div class="col-md-3 text-end">
                 {% if 'user_id' in session %}
                 <p class="welcome-message">Welcome, {{ session['username'] }}!</p>
-                <form action="{{ url_for('user_profile', username=session['username']) }}" method="get">
-                    <button type="submit" class="btn btn-primary">
-                        Profile
-                    </button>
-                    <button type="button" class="btn btn-primary"
-                        onclick="window.location.href='/logout'">Logout</button>
+                <form method="get">
+                    <a href="{{ url_for('auth.user_profile', username=session['username']) }}"
+                        class="btn btn-primary">Profile</a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-primary">Logout</a>
                 </form>
                 {% else %}
-                <button type="button" class="btn btn-primary" onclick="window.location.href='/login'">Login</button>
-                <button type="button" class="btn btn-primary" onclick="window.location.href='/create'">Sign up</button>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Login</a>
+                <a href="{{ url_for('auth.create') }}" class="btn btn-primary">Sign up</a>
                 {% endif %}
             </div>
         </header>

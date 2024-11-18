@@ -265,9 +265,7 @@
     background-color: #e60000 !important;
     border-color: #e60000 !important;
     color: white !important;
-    /* Белый текст при активации */
     box-shadow: none !important;
-    /* Убираем стандартное свечение при фокусе */
 }
 
 header {
@@ -311,9 +309,6 @@ header {
     font-size: 20px;
     margin: 10px 0;
     letter-spacing: 1px;
-}
-
-.lyrics p {
     color: #ff6347;
     text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
 }

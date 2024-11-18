@@ -11,17 +11,17 @@ Articles
 </div>
 {% else %}
 <div class="fixed-panel">
-    <a href="{{ url_for('create_article') }}" class="btn btn-primary">Add Article</a>
+    <a href="{{ url_for('articles.create_article') }}" class="btn btn-primary">Add Article</a>
 </div>
 <div class="articles-list mt-4">
     {% for article in articles %}
-    <a href="{{ url_for('article_detail', article_id=article.id) }}" class="article-link">
+    <a href="{{ url_for('articles.article_detail', article_id=article.id) }}" class="article-link">
         <div class="card mb-3">
             <div class="card-body">
                 <h5 class="card-title">{{ article.title }}</h5>
                 <p class="card-text">{{ article.content[:250] }}{% if article.content|length > 250 %}...{% endif %}</p>
                 {% if article.content|length > 250 %}
-                <a href="{{ url_for('article_detail', article_id=article.id) }}" class="readmore">Read More</a>
+                <a href="{{ url_for('articles.article_detail', article_id=article.id) }}" class="readmore">Read More</a>
                 {% endif %}
             </div>
             <div class="card-footer text-muted small">
