@@ -117,8 +117,20 @@ def create_article():
 
 @app.route('/articles/<int:article_id>')
 def article_detail(article_id):
-    article = Article.query.get_or_404(article_id)
-    return render_template('article_detail.html', article=article)
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    else:
+        article = Article.query.get_or_404(article_id)
+        return render_template('article_detail.html', article=article)
+
+@app.route('/user/<username>')
+def user_profile(username):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    else:
+        user = User.query.filter_by(username=username).first_or_404()
+        articles = Article.query.filter_by(author_id=user.id).order_by(Article.date_posted.desc()).all()
+        return render_template('user_profile.html', user=user, articles=articles)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -160,6 +172,16 @@ def edit_article(article_id):
 
     return render_template('edit_article.html', article=article)
 
+@app.route('/articles/delete/<int:article_id>', methods=['POST'])
+def delete_article(article_id):
+    article = Article.query.get_or_404(article_id)
+    
+    if article.author_id != session.get('user_id'):
+        return redirect(url_for('articles'))
+
+    db.session.delete(article)
+    db.session.commit()
+    return redirect(url_for('articles'))
 
 if __name__ == '__main__':
     app.run(debug=True)

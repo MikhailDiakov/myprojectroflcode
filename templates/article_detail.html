@@ -6,8 +6,36 @@
 <div class="article-detail">
     <h1>{{ article.title }}</h1>
     <p>{{ article.content }}</p>
+    <p>Author: <a href="{{ url_for('user_profile', username=article.author.username) }}" class="author">{{
+            article.author.username }}</a></p>
 </div>
+
 {% if session.get('user_id') == article.author_id %}
 <a class="btn btn-primary" href="{{ url_for('edit_article', article_id=article.id) }}">Edit Article</a>
+
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#deleteModal">
+    Delete Article
+</button>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this article?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('delete_article', article_id=article.id) }}" method="post">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endif %}
+
 {% endblock %}

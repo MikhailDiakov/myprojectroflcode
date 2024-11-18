@@ -1,3 +1,37 @@
+.all-articles {
+    text-align: center;
+    color: #000;
+    font-family: 'Roboto', sans-serif;
+    font-size: 26px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+}
+
+.article-link-2 {
+    text-decoration: none;
+    color: #e60000;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.article-link-2:hover {
+    text-decoration: underline;
+    color: #cc0000;
+}
+
+.no-articles {
+    text-align: center;
+    color: #666;
+    font-size: 18px;
+    font-style: italic;
+}
+
+.author {
+    color: red;
+}
+
 .article-link {
     display: block;
     text-decoration: none;
@@ -81,6 +115,7 @@
     border-color: red;
     color: white;
     transition: background-color 0.3s;
+    margin-bottom: 10px;
 }
 
 .btn-primary:hover {
@@ -205,7 +240,8 @@
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.btn-outline-primary:hover {
+.btn-outline-primary:hover,
+.btn-outline-primary:active {
     background-color: #ff4444;
     color: #ffffff;
     border-color: #ff4444;
@@ -222,6 +258,16 @@
     background-color: #ff4444;
     color: #ffffff;
     border-color: #ff4444;
+}
+
+.btn-primary:active,
+.btn-primary:focus {
+    background-color: #e60000 !important;
+    border-color: #e60000 !important;
+    color: white !important;
+    /* Белый текст при активации */
+    box-shadow: none !important;
+    /* Убираем стандартное свечение при фокусе */
 }
 
 header {
