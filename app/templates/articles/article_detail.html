@@ -4,9 +4,9 @@
 
 {% block body %}
 <div class="article-detail">
-    <h1>{{ article.title }}</h1>
-    <p>{{ article.content }}</p>
-    <p>Author: <a href="{{ url_for('auth.user_profile', username=article.author.username) }}" class="author">{{
+    <h1 class="title52">{{ article.title }}</h1>
+    <p class="title52" >{{ article.content }}</p>
+    <p class="title52">Author: <a href="{{ url_for('auth.user_profile', username=article.author.username) }}" class="author">{{
             article.author.username }}</a></p>
 
 
