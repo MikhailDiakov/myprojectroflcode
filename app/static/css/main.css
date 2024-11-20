@@ -1,3 +1,23 @@
+body.light .pages {
+    color: black;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 16px;
+    font-style: italic;
+}
+
+body.dark .pages {
+    color: white;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 16px;
+    font-style: italic;
+}
+
+.modal {
+    color: black;
+}
+
 body.light h1 {
     color: black;
 }
@@ -49,14 +69,14 @@ body.dark {
 
 .article-link-2 {
     text-decoration: none;
-    color: #e60000;
+    color: #ff6347;
     font-size: 18px;
     font-weight: bold;
 }
 
 .article-link-2:hover {
     text-decoration: underline;
-    color: #cc0000;
+    color: #ff6347;
 }
 
 .no-articles {
@@ -95,10 +115,19 @@ body.dark {
 
 body.dark .title52 {
     color: white !important;
+    font-size: 1.25rem;
+    margin: 10px 0;
+    font-style: italic;
+    letter-spacing: 1px;
+
 }
 
 body.light .title52 {
     color: black !important;
+    font-size: 1.25rem;
+    margin: 10px 0;
+    font-style: italic;
+    letter-spacing: 1px;
 }
 
 .article-detail {
@@ -140,20 +169,22 @@ body.light .title52 {
 .card-title {
     text-align: center;
     transition: background-color 0.3s;
-    font-size: 25px;
+    font-size: 20px;
     margin: 10px 0;
     letter-spacing: 1px;
 }
 
 .card-body {
-    font-size: 1.3rem;
+    font-size: 1rem;
     margin: 10px 0;
+    font-style: italic;
     letter-spacing: 1px;
 }
 
 .card-footer {
     font-size: 0.75rem;
     margin: 10px 0;
+    font-style: italic;
     letter-spacing: 1px;
 }
 
@@ -167,7 +198,7 @@ body.dark .btn-primary {
 body.dark .btn-primary:hover {
     background-color: #ff6347;
     color: white;
-    border-color: #ff6347
+    border-color: #ff6347;
 }
 
 body.dark .btn-primary:active,
@@ -244,8 +275,8 @@ body.dark .welcome-message {
 }
 
 body.light .form-control {
-    color: #ff4444;
-    border: 1px solid #ff4444;
+    color: #ff6347;
+    border: 1px solid #ff6347;
     padding: 10px;
     border-radius: 5px;
     font-size: 16px;
@@ -253,20 +284,20 @@ body.light .form-control {
 }
 
 body.light .form-control::placeholder {
-    color: #ff4444 !important;
+    color: #ff6347 !important;
     opacity: 0.8;
 }
 
 body.light .form-control:focus {
     border-color: #ffffff;
-    box-shadow: 0 0 5px #ff4444;
+    box-shadow: 0 0 5px #ff6347;
     outline: none;
 }
 
 body.dark .form-control {
     background-color: #333 !important;
     color: #fff !important;
-    border: 1px solid #ff4444;
+    border: 1px solid #ff6347;
     padding: 10px;
     border-radius: 5px;
     font-size: 16px;
@@ -274,22 +305,22 @@ body.dark .form-control {
 }
 
 body.dark .form-control::placeholder {
-    color: #ff4444 !important;
+    color: #ff6347 !important;
     opacity: 0.8;
 }
 
 
 body.dark .form-control:active,
 body.dark .form-control:focus {
-    border-color: #ff4444;
-    box-shadow: 0 0 5px #ff4444;
+    border-color: #ff6347;
+    box-shadow: 0 0 5px #ff6347;
     outline: none;
 }
 
 
 .btn-primary-form {
-    border-color: #ff4444;
-    color: #ff4444;
+    border-color: #ff6347;
+    color: #ff6347;
     font-size: 16px;
     font-weight: bold;
     padding: 10px;
@@ -299,13 +330,13 @@ body.dark .form-control:focus {
 }
 
 .btn-primary-form:hover {
-    background-color: #ff4444;
+    background-color: #ff6347;
     color: #ffffff;
     transform: scale(1.05);
 }
 
 .btn-primary-form:active {
-    background-color: #ff4444;
+    background-color: #ff6347;
 }
 
 /* Адаптация для мобильных */
@@ -320,7 +351,7 @@ body.dark .form-control:focus {
     font-size: 20px;
     margin: 10px 0;
     letter-spacing: 1px;
-    color: #ff4444;
+    color: #ff6347;
     transition: color 0.3s ease;
 }
 
@@ -330,35 +361,35 @@ body.dark .form-control:focus {
 
 .btn-outline-primary {
     background-color: white;
-    color: #ff4444;
-    border-color: #ff4444;
+    color: #ff6347;
+    border-color: #ff6347;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .btn-outline-primary:hover,
 .btn-outline-primary:active {
-    background-color: #ff4444;
+    background-color: #ff6347;
     color: #ffffff;
-    border-color: #ff4444;
+    border-color: #ff6347;
 }
 
 body.light .btn-primary {
     background-color: white;
-    color: #ff4444;
-    border-color: #ff4444;
+    color: #ff6347;
+    border-color: #ff6347;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body.light .btn-primary:hover {
-    background-color: #ff4444;
+    background-color: #ff6347;
     color: #ffffff;
-    border-color: #ff4444;
+    border-color: #ff6347;
 }
 
 body.light .btn-primary:active,
 body.light .btn-primary:focus {
-    background-color: #ff4444 !important;
-    border-color: #ff4444 !important;
+    background-color: #ff6347 !important;
+    border-color: #ff6347 !important;
     color: white !important;
     box-shadow: none !important;
 }
@@ -404,12 +435,12 @@ header {
     font-size: 20px;
     margin: 10px 0;
     letter-spacing: 1px;
-    color: #ff4444;
+    color: #ff6347;
     text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
 }
 
 .lyrics p:nth-child(odd) {
-    color: #ff4444;
+    color: #ff6347;
 }
 
 .lyrics p:nth-child(even) {

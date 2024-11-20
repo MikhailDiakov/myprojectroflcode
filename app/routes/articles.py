@@ -10,7 +10,7 @@ def articles():
         return render_template('articles/articles.html', message="You need to be logged in to view or post articles")
 
     query = request.args.get('query', '')  
-    page = request.args.get('page', 1, type=int)  
+    page = request.args.get('page', 1, type=int)
 
     articles_query = Article.query
     if query:
