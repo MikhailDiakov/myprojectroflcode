@@ -1,27 +1,29 @@
-body.light h1{
-    color:black;
+body.light h1 {
+    color: black;
 }
-body.dark h1{
-    color:white;
+
+body.dark h1 {
+    color: white;
 }
+
 body.light .card {
-    background-color: #fff;  
-    color: #333;  
+    background-color: #fff;
+    color: #333;
 }
 
 body.dark .card {
-    background-color: #333;  
-    color: #fff;  
+    background-color: #333;
+    color: #fff;
 }
 
 body.light header {
-    background-color: #fff;  
-    color: #000;  
+    background-color: #fff;
+    color: #000;
 }
 
 body.dark header {
-    background-color: #333;  
-    color: #fff;  
+    background-color: #333;
+    color: #fff;
 }
 
 body.light {
@@ -65,7 +67,7 @@ body.dark {
 }
 
 .author {
-    color: red;
+    color: #ff6347;
 }
 
 .article-link {
@@ -90,12 +92,15 @@ body.dark {
 .readmore:hover {
     transform: scale(1.05);
 }
-body.dark .title52{
-    color:white !important;
+
+body.dark .title52 {
+    color: white !important;
 }
-body.light .title52{
-    color:black !important;
+
+body.light .title52 {
+    color: black !important;
 }
+
 .article-detail {
     max-width: 1000px;
     margin: 20px auto;
@@ -154,22 +159,22 @@ body.light .title52{
 
 body.dark .btn-primary {
     background-color: #333;
-    color: red;
-    border-color: red;
+    color: #ff6347;
+    border-color: #ff6347;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body.dark .btn-primary:hover {
-    background-color: red;
+    background-color: #ff6347;
     color: white;
-    border-color: red;
+    border-color: #ff6347
 }
 
 body.dark .btn-primary:active,
 body.dark .btn-primary:focus {
     background-color: #333 !important;
-    border-color: red !important;
-    color: red!important;
+    border-color: #ff6347 !important;
+    color: #ff6347 !important;
     box-shadow: none !important;
 }
 
@@ -194,13 +199,14 @@ body.dark .card-footer.small {
     color: white !important;
 }
 
- body.light .welcome-message {
+body.light .welcome-message {
     font-size: 16px;
     margin: 10px 0;
     letter-spacing: 1px;
     color: black;
     transition: color 0.3s ease;
 }
+
 body.dark .welcome-message {
     font-size: 16px;
     margin: 10px 0;
