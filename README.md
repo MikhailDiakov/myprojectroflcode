@@ -31,7 +31,7 @@ A **prototype social network** built with Flask.
 
 4. **Run the application**:  
    ```bash
-   python3 run.py
+   python run.py
    ```  
 
 5. **Open in your browser**:  
