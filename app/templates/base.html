@@ -29,6 +29,9 @@
                 <li><a href="{{ url_for('articles.articles') }}" class="nav-link px-2">Articles</a></li>
             </ul>
             <div class="col-md-3 text-end">
+                <div>
+                    <button id="theme-toggle" class="btn btn-primary btn-sm mb-3">Switch Theme</button>
+                </div>
                 {% if 'user_id' in session %}
                 <p class="welcome-message">Welcome, {{ session['username'] }}!</p>
                 <form method="get">
@@ -44,6 +47,22 @@
         </header>
         {% block body %}{% endblock %}
     </div>
-</body>
+    <script>
+// Проверяем, если сохранена тема в localStorage
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) {
+    document.body.classList.add(savedTheme);
+}
 
+// Функция для переключения темы
+const toggleButton = document.getElementById('theme-toggle');
+toggleButton.addEventListener('click', () => {
+    const currentTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.body.classList.remove(currentTheme);
+    document.body.classList.add(newTheme);
+    localStorage.setItem('theme', newTheme); // Сохраняем выбранную тему
+});
+    </script>
+</body>
 </html>

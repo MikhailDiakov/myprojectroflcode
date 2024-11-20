@@ -1,3 +1,39 @@
+body.light h1{
+    color:black;
+}
+body.dark h1{
+    color:white;
+}
+body.light .card {
+    background-color: #fff;  
+    color: #333;  
+}
+
+body.dark .card {
+    background-color: #333;  
+    color: #fff;  
+}
+
+body.light header {
+    background-color: #fff;  
+    color: #000;  
+}
+
+body.dark header {
+    background-color: #333;  
+    color: #fff;  
+}
+
+body.light {
+    background-color: #fff;
+    color: #000;
+}
+
+body.dark {
+    background-color: #333;
+    color: #fff;
+}
+
 .all-articles {
     text-align: center;
     color: #000;
@@ -54,7 +90,12 @@
 .readmore:hover {
     transform: scale(1.05);
 }
-
+body.dark .title52{
+    color:white !important;
+}
+body.light .title52{
+    color:black !important;
+}
 .article-detail {
     max-width: 1000px;
     margin: 20px auto;
@@ -63,6 +104,7 @@
     line-height: 1.6;
     word-wrap: break-word;
 }
+
 
 .article-detail p {
     font-size: 1.3rem;
@@ -110,18 +152,27 @@
     letter-spacing: 1px;
 }
 
-.btn-primary {
-    background-color: red;
+body.dark .btn-primary {
+    background-color: #333;
+    color: red;
     border-color: red;
-    color: white;
-    transition: background-color 0.3s;
-    margin-bottom: 10px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.btn-primary:hover {
-    background-color: #c70000;
-    border-color: #c70000;
+body.dark .btn-primary:hover {
+    background-color: red;
+    color: white;
+    border-color: red;
 }
+
+body.dark .btn-primary:active,
+body.dark .btn-primary:focus {
+    background-color: #333 !important;
+    border-color: red !important;
+    color: red!important;
+    box-shadow: none !important;
+}
+
 
 .card-header {
     background-color: #222;
@@ -132,15 +183,29 @@
     padding: 10px;
 }
 
-.card-footer.small {
+body.light .card-footer.small {
     font-size: 0.75rem;
+    color: black !important;
+    background-color: white;
 }
 
-.welcome-message {
+body.dark .card-footer.small {
+    font-size: 0.75rem;
+    color: white !important;
+}
+
+ body.light .welcome-message {
     font-size: 16px;
     margin: 10px 0;
     letter-spacing: 1px;
     color: black;
+    transition: color 0.3s ease;
+}
+body.dark .welcome-message {
+    font-size: 16px;
+    margin: 10px 0;
+    letter-spacing: 1px;
+    color: white;
     transition: color 0.3s ease;
 }
 
@@ -172,7 +237,7 @@
     gap: 15px;
 }
 
-.form-control {
+body.light .form-control {
     color: #ff4444;
     border: 1px solid #ff4444;
     padding: 10px;
@@ -181,16 +246,40 @@
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.form-control::placeholder {
+body.light .form-control::placeholder {
     color: #ff4444;
     opacity: 0.8;
 }
 
-.form-control:focus {
+body.light .form-control:focus {
     border-color: #ffffff;
     box-shadow: 0 0 5px #ff4444;
     outline: none;
 }
+
+body.dark .form-control {
+    background-color: #333 !important;
+    color: #fff !important;
+    border: 1px solid #ff4444;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+body.dark .form-control::placeholder {
+    color: #ff4444;
+    opacity: 0.8;
+}
+
+
+body.dark .form-control:active,
+body.dark .form-control:focus {
+    border-color: #ff4444;
+    box-shadow: 0 0 5px #ff4444;
+    outline: none;
+}
+
 
 .btn-primary-form {
     border-color: #ff4444;
@@ -247,21 +336,21 @@
     border-color: #ff4444;
 }
 
-.btn-primary {
+body.light .btn-primary {
     background-color: white;
     color: #ff4444;
     border-color: #ff4444;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.btn-primary:hover {
+body.light .btn-primary:hover {
     background-color: #ff4444;
     color: #ffffff;
     border-color: #ff4444;
 }
 
-.btn-primary:active,
-.btn-primary:focus {
+body.light .btn-primary:active,
+body.light .btn-primary:focus {
     background-color: #e60000 !important;
     border-color: #e60000 !important;
     color: white !important;
