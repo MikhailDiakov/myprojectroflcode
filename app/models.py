@@ -21,4 +21,4 @@ class Article(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     author = db.relationship('User', backref=db.backref('articles', lazy=True))
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
-    date_modified = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    date_modified = db.Column(db.DateTime, onupdate=datetime.utcnow,nullable=True)

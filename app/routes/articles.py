@@ -9,8 +9,20 @@ def articles():
     if 'user_id' not in session:  
         return render_template('articles/articles.html', message="You need to be logged in to view or post articles")
 
-    articles = Article.query.order_by(Article.date_posted.desc()).all()
-    return render_template('articles/articles.html', articles=articles)
+    query = request.args.get('query', '')  
+    page = request.args.get('page', 1, type=int)  
+
+    articles_query = Article.query
+    if query:
+        articles_query = articles_query.filter(Article.title.ilike(f"%{query}%"))
+
+    articles = articles_query.order_by(Article.date_posted.desc()).paginate(page=page, per_page=10)
+
+    return render_template(
+        'articles/articles.html',
+        articles=articles,
+        query=query  
+    )
 
 @article_bp.route('/<int:article_id>')
 def article_detail(article_id):

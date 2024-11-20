@@ -253,7 +253,7 @@ body.light .form-control {
 }
 
 body.light .form-control::placeholder {
-    color: #ff4444;
+    color: #ff4444 !important;
     opacity: 0.8;
 }
 
@@ -274,7 +274,7 @@ body.dark .form-control {
 }
 
 body.dark .form-control::placeholder {
-    color: #ff4444;
+    color: #ff4444 !important;
     opacity: 0.8;
 }
 
@@ -305,7 +305,7 @@ body.dark .form-control:focus {
 }
 
 .btn-primary-form:active {
-    background-color: #ff2222;
+    background-color: #ff4444;
 }
 
 /* Адаптация для мобильных */
@@ -357,8 +357,8 @@ body.light .btn-primary:hover {
 
 body.light .btn-primary:active,
 body.light .btn-primary:focus {
-    background-color: #e60000 !important;
-    border-color: #e60000 !important;
+    background-color: #ff4444 !important;
+    border-color: #ff4444 !important;
     color: white !important;
     box-shadow: none !important;
 }
@@ -404,12 +404,12 @@ header {
     font-size: 20px;
     margin: 10px 0;
     letter-spacing: 1px;
-    color: #ff6347;
+    color: #ff4444;
     text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
 }
 
 .lyrics p:nth-child(odd) {
-    color: #ff6347;
+    color: #ff4444;
 }
 
 .lyrics p:nth-child(even) {

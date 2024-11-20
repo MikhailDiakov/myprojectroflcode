@@ -10,11 +10,23 @@ Articles
     <p>{{ message }}</p>
 </div>
 {% else %}
+
+<!-- Кнопка добавления новой статьи -->
 <div class="fixed-panel">
     <a href="{{ url_for('articles.create_article') }}" class="btn btn-primary">Add Article</a>
 </div>
+
+<!-- Форма поиска -->
+<div class="search-form mt-4">
+    <form method="get" action="{{ url_for('articles.articles') }}">
+        <input type="text" name="query" value="{{ query }}" class="form-control" placeholder="Search articles by title">
+        <button type="submit" class="btn btn-primary mt-2">Search</button>
+    </form>
+</div>
+
+<!-- Список статей -->
 <div class="articles-list mt-4">
-    {% for article in articles %}
+    {% for article in articles.items %}
     <a href="{{ url_for('articles.article_detail', article_id=article.id) }}" class="article-link">
         <div class="card mb-3">
             <div class="card-body">
@@ -31,12 +43,27 @@ Articles
                 <br><small>Last updated: {{ article.date_modified.strftime('%Y-%m-%d %H:%M') }} UTC</small>
                 {% endif %}
             </div>
-
         </div>
     </a>
     {% else %}
     <p>No articles found.</p>
     {% endfor %}
 </div>
+
+<!-- Пагинация -->
+<div class="pagination mt-4">
+    {% if articles.has_prev %}
+    <a href="{{ url_for('articles.articles', page=1, query=query) }}" class="btn btn-primary mx-2">First</a>
+    <a href="{{ url_for('articles.articles', page=articles.prev_num, query=query) }}" class="btn btn-primary mx-2">Previous</a>
+    {% endif %}
+
+    <span class="mx-2">Page {{ articles.page }} of {{ articles.pages }}</span>
+
+    {% if articles.has_next %}
+    <a href="{{ url_for('articles.articles', page=articles.next_num, query=query) }}" class="btn btn-primary mx-2">Next</a>
+    <a href="{{ url_for('articles.articles', page=articles.pages, query=query) }}" class="btn btn-primary mx-2">Last</a>
+    {% endif %}
+</div>
+
 {% endif %}
 {% endblock %}

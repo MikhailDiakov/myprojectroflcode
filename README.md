@@ -6,10 +6,19 @@ A **prototype social network** built with Flask.
 
 ### Installation  
 
-1. **Clone the repository**:  
+1. **Clone the repository and configuration creation**:  
    ```bash
    git clone https://github.com/MikhailDiakov/myprojectroflcode.git
    cd myprojectroflcode
+   mkdir instance
+   touch instance/config.py
+
+   - FILE THIS!!!
+   class Config:
+      SECRET_KEY = 'your-secret-key'
+      SQLALCHEMY_DATABASE_URI = 'sqlite:///iambored.db'
+      SQLALCHEMY_TRACK_MODIFICATIONS = False
+   CHANGE SECRET_KEY!!!
    ```
 
 2. **Set up a virtual environment**:  
@@ -23,7 +32,7 @@ A **prototype social network** built with Flask.
      python -m venv venv  
      venv\Scripts\activate  
      ```  
-
+      
 3. **Install dependencies**:  
    ```bash
    pip install -r requirements.txt
