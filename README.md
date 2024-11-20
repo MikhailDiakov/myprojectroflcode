@@ -15,7 +15,7 @@ A **prototype social network** built with Flask.
 2. **Set up a virtual environment**:  
    - For Linux/Mac:  
      ```bash
-     python3 -m venv venv  
+     python -m venv venv  
      source venv/bin/activate  
      ```  
    - For Windows:  
