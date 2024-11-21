@@ -22,3 +22,21 @@ class Article(db.Model):
     author = db.relationship('User', backref=db.backref('articles', lazy=True))
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
     date_modified = db.Column(db.DateTime, onupdate=datetime.utcnow,nullable=True)
+
+class Like(db.Model):
+    __tablename__ = 'likes'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    article_id = db.Column(db.Integer, db.ForeignKey('article.id'), nullable=False)
+    is_like = db.Column(db.Boolean, nullable=False)  
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    date_posted = db.Column(db.DateTime, default=datetime.utcnow)
+    article_id = db.Column(db.Integer, db.ForeignKey('article.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    article = db.relationship('Article', backref=db.backref('comments', lazy=True))
+    user = db.relationship('User', backref=db.backref('comments', lazy=True))
