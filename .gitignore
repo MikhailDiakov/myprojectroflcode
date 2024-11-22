@@ -14,7 +14,3 @@ config.py
 
 *.log
 *.sqlite3
-*.jpg
-*.png
-*.jpeg
-*.gif
