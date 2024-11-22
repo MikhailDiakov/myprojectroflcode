@@ -7,7 +7,9 @@ class User(db.Model):
     username = db.Column(db.String(21), unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
-
+    avatar_url = db.Column(db.String(200), default='img/default_avatar.jpg')  
+    bio = db.Column(db.Text, default='')  
+    
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 

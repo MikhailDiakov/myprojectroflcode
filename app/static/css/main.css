@@ -1,3 +1,19 @@
+.welcome-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.avatar {
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: block;
+    margin: 0 auto;
+}
+
 body.light .pages {
     color: black;
     margin-left: auto;
@@ -129,7 +145,6 @@ body.dark .title52 {
     margin: 10px 0;
     font-style: italic;
     letter-spacing: 1px;
-
 }
 
 body.light .title52 {

@@ -33,8 +33,11 @@
                     <button id="theme-toggle" class="btn btn-primary btn-sm mb-3">Switch Theme</button>
                 </div>
                 {% if 'user_id' in session %}
-                <p class="welcome-message">Welcome, {{ session['username'] }}!</p>
-                <form method="get">
+                <div class="welcome-container">
+                    <p class="welcome-message">Welcome, {{ session['username'] }}!</p>
+                    <img src="{{ url_for('static', filename=session['avatar_url']) }}" alt="Avatar" class="avatar">
+                </div>
+                <form method="get" class="mt-3">
                     <a href="{{ url_for('auth.user_profile', username=session['username']) }}"
                         class="btn btn-primary">Profile</a>
                     <a href="{{ url_for('auth.logout') }}" class="btn btn-primary">Logout</a>
@@ -48,21 +51,22 @@
         {% block body %}{% endblock %}
     </div>
     <script>
-// Проверяем, если сохранена тема в localStorage
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme) {
-    document.body.classList.add(savedTheme);
-}
+        // Проверяем, если сохранена тема в localStorage
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.body.classList.add(savedTheme);
+        }
 
-// Функция для переключения темы
-const toggleButton = document.getElementById('theme-toggle');
-toggleButton.addEventListener('click', () => {
-    const currentTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    document.body.classList.remove(currentTheme);
-    document.body.classList.add(newTheme);
-    localStorage.setItem('theme', newTheme); // Сохраняем выбранную тему
-});
+        // Функция для переключения темы
+        const toggleButton = document.getElementById('theme-toggle');
+        toggleButton.addEventListener('click', () => {
+            const currentTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.classList.remove(currentTheme);
+            document.body.classList.add(newTheme);
+            localStorage.setItem('theme', newTheme); // Сохраняем выбранную тему
+        });
     </script>
 </body>
+
 </html>

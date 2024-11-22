@@ -1,4 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
+from werkzeug.utils import secure_filename
+import os
 from ..models import User, db
 import re
 
@@ -40,6 +42,7 @@ def create():
 
         session['user_id'] = user.id
         session['username'] = user.username
+        session['avatar_url'] = user.avatar_url
         return redirect(url_for('main.index'))
 
     return render_template('auth/create.html')
@@ -72,4 +75,56 @@ def user_profile(username):
         return redirect(url_for('auth.login'))
     user = User.query.filter_by(username=username).first_or_404()
     articles = user.articles
-    return render_template('auth/profile.html', user=user,articles=articles)
+    avatar_url=user.avatar_url
+    return render_template('auth/profile.html', user=user,articles=articles,avatar_url=avatar_url)
+
+UPLOAD_FOLDER = 'app/static/uploads/avatars'  
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+@auth_bp.route('/profile/edit', methods=['GET', 'POST'])
+def edit_profile():
+    if 'user_id' not in session:
+        return redirect(url_for('auth.login'))
+
+    user = User.query.get(session['user_id'])
+
+    if request.method == 'POST':
+        bio = request.form.get('bio')
+
+        avatar = request.files.get('avatar')
+        if avatar and allowed_file(avatar.filename):
+            filename = secure_filename(avatar.filename)
+            avatar_path = os.path.join(UPLOAD_FOLDER, filename)
+            avatar.save(avatar_path)
+            user.avatar_url = f'/uploads/avatars/{filename}'  
+            session['avatar_url'] = user.avatar_url
+
+        if bio:
+            if len(bio) > 100:
+                error_message = "Bio is too long! It should be up to 100 characters."
+                return render_template('auth/edit_profile.html', error_message=error_message,user=user)
+            user.bio = bio
+
+        db.session.commit()
+        return redirect(url_for('auth.user_profile', username=user.username))
+
+    return render_template('auth/edit_profile.html', user=user)
+
+@auth_bp.route('/profile/reset_avatar', methods=['POST'])
+def reset_avatar():
+    if 'user_id' not in session:
+        return redirect(url_for('auth.login'))
+
+    user = User.query.get(session['user_id'])
+
+    user.avatar_url = 'img/default_avatar.jpg'  
+
+    session['avatar_url'] = user.avatar_url
+    db.session.commit()
+
+    return redirect(url_for('auth.edit_profile'))
