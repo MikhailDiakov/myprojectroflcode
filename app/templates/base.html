@@ -40,6 +40,7 @@
                 <form method="get" class="mt-3">
                     <a href="{{ url_for('auth.user_profile', username=session['username']) }}"
                         class="btn btn-primary">Profile</a>
+                    <a href="{{ url_for('dialog.dialogs') }}" class="btn btn-primary">My Dialogs</a>
                     <a href="{{ url_for('auth.logout') }}" class="btn btn-primary">Logout</a>
                 </form>
                 {% else %}

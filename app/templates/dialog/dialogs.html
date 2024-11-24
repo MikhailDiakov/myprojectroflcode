@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Dialogs
+{% endblock %}
+
+{% block body %}
+<h1 class="page-title">Dialogs</h1>
+<ul class="dialog-list">
+    {% for user in users %}
+    <li class="dialog-item">
+        <a href="{{ url_for('dialog.dialog', username=user.username) }}" class="dialog-link">{{ user.username }}</a>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

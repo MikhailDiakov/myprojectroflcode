@@ -13,13 +13,18 @@
 height: 125px;">
     <h1 class="welcome-message" style="font-size: 22px;text-align: center;">{{ user.username }}</h1>
     <h1 class="welcome-message" style="font-size: 14px;text-align: center;">{{ user.bio }}</h1>
+    {% if session.get('user_id')!=user.id %}
+    <a href="{{ url_for('dialog.dialog', username=user.username) }}" class="btn btn-primary" style="  margin: 0 auto;
+    display: block; width: 200px; height: 40px;">Start a conversation</a>
+    {% endif %}
 </div>
 {% if articles %}
 <div>
-    <h1 class="all-articles mt-3">All Articles</h1>
+    <h1 class="all-articles mt-3" style="font-size: 16px;">All Articles</h1>
     <ul>
         {% for article in articles %}
-        <li><a href="{{ url_for('articles.article_detail', article_id=article.id) }}" class="article-link-2">{{
+        <li><a href="{{ url_for('articles.article_detail', article_id=article.id) }}" class="article-link-2"
+                style="font-size: 14px;">{{
                 article.title }}</a>
         </li>
         {% endfor %}

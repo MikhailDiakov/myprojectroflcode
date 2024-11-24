@@ -57,6 +57,8 @@ def login():
         if user and user.check_password(password):
             session['user_id'] = user.id
             session['username'] = user.username
+            session['avatar_url'] = user.avatar_url
+            
             return redirect(url_for('main.index'))
 
         error_message = 'Invalid username or password.'
@@ -127,4 +129,4 @@ def reset_avatar():
     session['avatar_url'] = user.avatar_url
     db.session.commit()
 
-    return redirect(url_for('auth.edit_profile'))
+    return redirect(url_for('auth.user_profile', username=user.username))

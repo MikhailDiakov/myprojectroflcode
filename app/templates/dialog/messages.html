@@ -1,0 +1,16 @@
+{% for message in messages %}
+<div class="message-item">
+    <strong class="message-sender">
+        {{ 'You' if message.sender_id == session['user_id'] else message.sender.username }}:
+    </strong>
+    <span class="message-content">{{ message.content }}</span>
+</div>
+<script>
+    function scrollToBottom() {
+        const messagesContainer = document.getElementById("messages");
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    document.addEventListener("DOMContentLoaded", scrollToBottom);
+</script>
+{% endfor %}
