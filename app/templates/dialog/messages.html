@@ -4,13 +4,8 @@
         {{ 'You' if message.sender_id == session['user_id'] else message.sender.username }}:
     </strong>
     <span class="message-content">{{ message.content }}</span>
+    <span class="message-time" style="right: 0;bottom: 0;position: absolute;">
+        {{ message.timestamp.strftime('%H:%M %d/%m') }}
+    </span>
 </div>
-<script>
-    function scrollToBottom() {
-        const messagesContainer = document.getElementById("messages");
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-
-    document.addEventListener("DOMContentLoaded", scrollToBottom);
-</script>
 {% endfor %}

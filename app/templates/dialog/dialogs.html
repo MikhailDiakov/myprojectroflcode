@@ -9,7 +9,20 @@ Dialogs
 <ul class="dialog-list">
     {% for user in users %}
     <li class="dialog-item">
-        <a href="{{ url_for('dialog.dialog', username=user.username) }}" class="dialog-link">{{ user.username }}</a>
+        <div class="dialog-row">
+            <a href="{{ url_for('auth.user_profile', username=user.username) }}">
+                <img src="{{ url_for('static', filename=user.avatar_url) }}" alt="Avatar" class="dialog-avatar">
+            </a>
+            <a href="{{ url_for('dialog.dialog', username=user.username) }}" class="dialog-link">{{ user.username }}</a>
+            <span class="dialog-last-message">
+                {{ 'You' if last_messages[user.id].sender_id == session['user_id'] else
+                last_messages[user.id].sender.username }}:
+                {{ last_messages[user.id].content }}
+            </span>
+            <span class="message-time">
+                {{ last_messages[user.id].timestamp.strftime('%H:%M %d/%m') }}
+            </span>
+        </div>
     </li>
     {% endfor %}
 </ul>

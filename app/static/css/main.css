@@ -507,7 +507,6 @@ header {
     background-color: #f1f1f1;
 }
 
-/* Стили для чата */
 .chat-title {
     text-align: center;
     font-size: 22px;
@@ -516,6 +515,18 @@ header {
     color: white;
     transition: color 0.3s ease;
 }
+
+.message-container {
+    overflow-y: scroll;
+    scrollbar-width: thin;
+    scrollbar-color: #333 #f0f0f0;
+    word-wrap: break-word;
+    word-break: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
+}
+
+
 
 body.dark .message-container {
     max-width: 600px;
@@ -530,8 +541,9 @@ body.dark .message-container {
 }
 
 .message-item {
-    margin-bottom: 15px;
-    padding: 5px 0;
+    margin-bottom: 0px;
+    padding: 4px 0;
+    position: relative;
 }
 
 body.dark .message-sender {
@@ -591,4 +603,54 @@ body.light .message-container {
 body.light .message-sender {
     font-weight: bold;
     color: #333;
+}
+
+
+.dialog-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dialog-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+body.dark .dialog-last-message {
+    color: white;
+}
+
+body.light .dialog-last-message {
+    color: black;
+}
+
+.dialog-last-message {
+    font-size: 16px;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-grow: 1;
+    text-decoration: none;
+}
+
+.message-container {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.message-container::-webkit-scrollbar {
+    display: none;
+}
+
+.message-time {
+    font-size: 0.85rem;
+    color: #8a8a8a;
+    margin-left: 10px;
+    white-space: nowrap;
+    font-family: 'Arial', sans-serif;
+    display: inline-block;
 }

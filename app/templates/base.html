@@ -52,20 +52,18 @@
         {% block body %}{% endblock %}
     </div>
     <script>
-        // Проверяем, если сохранена тема в localStorage
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) {
             document.body.classList.add(savedTheme);
         }
 
-        // Функция для переключения темы
         const toggleButton = document.getElementById('theme-toggle');
         toggleButton.addEventListener('click', () => {
             const currentTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             document.body.classList.remove(currentTheme);
             document.body.classList.add(newTheme);
-            localStorage.setItem('theme', newTheme); // Сохраняем выбранную тему
+            localStorage.setItem('theme', newTheme);
         });
     </script>
 </body>

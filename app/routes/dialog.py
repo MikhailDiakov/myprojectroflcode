@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from ..models import User, Message, db
 from datetime import datetime
+from sqlalchemy import or_, desc
 
 dialog_bp = Blueprint('dialog', __name__, url_prefix='/dialog')
 
@@ -14,10 +15,25 @@ def dialogs():
 
     sender_id = session['user_id']
     users = db.session.query(User).join(Message, (Message.sender_id == User.id) | (Message.recipient_id == User.id)) \
-                                   .filter((Message.sender_id == sender_id) | (Message.recipient_id == sender_id)) \
-                                   .distinct() \
-                                   .all()
-    return render_template('dialog/dialogs.html', users=users)
+                                .filter((Message.sender_id == sender_id) | (Message.recipient_id == sender_id)) \
+                                .filter(User.id != sender_id).distinct() \
+                                .all()
+
+    last_messages = {}
+    for user in users:
+        last_message = Message.query.filter(
+            (Message.sender_id == user.id) | (Message.recipient_id == user.id)
+        ).order_by(Message.timestamp.desc()).first()
+
+        if last_message:
+            last_messages[user.id] = {
+                'content': last_message.content,  
+                'sender': last_message.sender,    
+                'timestamp': last_message.timestamp  
+            }
+        
+
+    return render_template('dialog/dialogs.html', users=users, last_messages=last_messages)
 
 @dialog_bp.route('/<username>')
 def dialog(username):
