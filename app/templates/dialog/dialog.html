@@ -7,66 +7,28 @@ Chat with {{ recipient.username }}
 {% block body %}
 <h1 class="chat-title">Chat with {{ recipient.username }}</h1>
 
-<div id="messages" class="message-container">
-    {% include 'dialog/messages.html' %}
+<div id="messages" class="message-container" data-room="{{ room }}" data-sender="{{ session['user_id'] }}"
+    data-recipient="{{ recipient.id }}">
+    {% for message in messages %}
+    <div class="message-item">
+        <strong class="message-sender">
+            {{ 'You' if message.sender_id == session['user_id'] else message.sender.username }}:
+        </strong>
+        <span class="message-content">{{ message.content }}</span>
+        <span class="message-time" style="right: 0; bottom: 0; position: absolute;">
+            {{ message.timestamp.strftime('%H:%M %d/%m') }}
+        </span>
+    </div>
+    {% endfor %}
 </div>
 
-<form method="POST" action="{{ url_for('dialog.send_message', username=recipient.username) }}" class="message-form">
-    <textarea name="content" class="message-input" required></textarea>
+
+
+<form id="message-form" class="message-form">
+    <textarea id="message-input" name="content" class="message-input" required></textarea>
     <button type="submit" class="btn btn-primary">Send</button>
 </form>
-<script>
-    function scrollToBottom() {
-        const messagesContainer = document.getElementById("messages");
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        const messagesContainer = document.getElementById("messages");
-        const messageInput = document.querySelector(".message-input");
-        const messageForm = document.querySelector(".message-form");
-        const recipientUsername = "{{ recipient.username }}";
-
-        function isScrolledToBottom() {
-            const threshold = 50;
-            return (
-                messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight <= threshold
-            );
-        }
-
-        function fetchMessages() {
-            fetch(`/dialog/${recipientUsername}/update`, { method: "GET" })
-                .then(response => response.text())
-                .then(data => {
-                    const wasScrolledToBottom = isScrolledToBottom();
-                    messagesContainer.innerHTML = data;
-                    if (wasScrolledToBottom) {
-                        scrollToBottom();
-                    }
-                })
-                .catch(error => console.error("Error fetching messages:", error));
-        }
-
-        setInterval(fetchMessages, 2000);
-
-        if (messageInput && messageForm) {
-            messageInput.focus();
-
-            messageInput.addEventListener("keydown", (e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    messageForm.submit();
-
-                    setTimeout(() => {
-                        messageInput.value = "";
-                        messageInput.focus();
-                    }, 100);
-                }
-            });
-        }
-
-        scrollToBottom();
-    });
-</script>
-
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script src="/static/js/dialog.js"></script>
 {% endblock %}
