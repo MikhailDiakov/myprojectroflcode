@@ -46,7 +46,7 @@ def create_article():
 
         if len(title) > 100:
             error_message = "Title is too long! It should be up to 100 characters."
-            return render_template('articles/create.html', error_message=error_message)
+            return render_template('articles/create_articles.html', error_message=error_message)
 
         new_article = Article(title=title, content=content, author_id=session['user_id'])
         db.session.add(new_article)
@@ -124,9 +124,6 @@ def add_comment(article_id):
     db.session.commit()
 
     return redirect(url_for('articles.article_detail', article_id=article_id))
-
-from flask import flash, redirect, url_for
-from datetime import datetime, timedelta
 
 @article_bp.route('/comment/delete/<int:comment_id>', methods=['POST'])
 

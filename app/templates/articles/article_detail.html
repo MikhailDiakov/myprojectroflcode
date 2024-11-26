@@ -39,14 +39,14 @@
             </div>
         </div>
     </div>
-    <div>
+    <div style="max-width: 1000px; margin: 20px auto;">
         <form action="{{ url_for('articles.like_article', article_id=article.id) }}" method="post">
             <button class='btn btn-primary' type="submit" name="action" value="like">👍 Like({{likes_count}})</button>
             <button class='btn btn-primary' type="submit" name="action" value="dislike">👎
                 Dislike({{dislikes_count}})</button>
         </form>
     </div>
-    <div id="comments-section">
+    <div id="comments-section" style="max-width: 1000px; margin: 20px auto;">
         <h3 class="welcome-message">Comments</h3>
         <ul id="comments-list" class="welcome-message" style="word-wrap: break-word;
     white-space: normal;">
