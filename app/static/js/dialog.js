@@ -15,14 +15,14 @@ document.addEventListener('DOMContentLoaded', function () {
     socket.on('receive_message', function (data) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message-item');
-
-        if (data.sender === sender) {
+        if (String(data.sender) === String(sender)) {
             messageElement.classList.add('sent');
             messageElement.innerHTML = `<strong>You:</strong> ${data.content} <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>`;
         } else {
             messageElement.classList.add('received');
             messageElement.innerHTML = `<strong>${data.sender_username}:</strong> ${data.content} <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>`;
         }
+
 
         messagesContainer.appendChild(messageElement);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;

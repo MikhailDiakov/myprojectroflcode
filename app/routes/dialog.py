@@ -83,6 +83,7 @@ def handle_send_message(data):
         recipient_username = User.query.get(recipient_id).username
 
         emit('receive_message', {
+            'sender': sender_id,
             'sender_username': sender_username, 
             'recipient_username': recipient_username, 
             'content': content,
