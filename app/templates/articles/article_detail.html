@@ -40,42 +40,42 @@
         </div>
     </div>
     <div style="max-width: 1000px; margin: 20px auto;">
-        <form action="{{ url_for('articles.like_article', article_id=article.id) }}" method="post">
-            <button class='btn btn-primary' type="submit" name="action" value="like">👍 Like({{likes_count}})</button>
-            <button class='btn btn-primary' type="submit" name="action" value="dislike">👎
-                Dislike({{dislikes_count}})</button>
-        </form>
+        <button class='btn btn-primary btn-like' data-article-id="{{ article.id }}" value="like">👍 Like(<span
+                id="likes-count">{{ likes_count }}</span>)</button>
+        <button class='btn btn-primary btn-dislike' data-article-id="{{ article.id }}" value="dislike">👎 Dislike(<span
+                id="dislikes-count">{{ dislikes_count }}</span>)</button>
     </div>
     <div id="comments-section" style="max-width: 1000px; margin: 20px auto;">
         <h3 class="welcome-message">Comments</h3>
-        <ul id="comments-list" class="welcome-message" style="word-wrap: break-word;
-    white-space: normal;">
-            {% for comment in article.comments %}
-            <li>
+        <ul id="comments-list" class="welcome-message" style="word-wrap: break-word; white-space: normal;">
+            {% for comment in comments %}
+            <li id="comment-{{ comment.id }}">
                 <strong>{{ comment.user.username }}</strong>: {{ comment.content }}
-                <span class="comment-date">
-                    ({{ comment.date_posted.strftime('%b %d, %Y at %H:%M') }})
-                </span>
+                <span class="comment-date">({{ comment.date_posted.strftime('%b %d, %Y at %H:%M') }})</span>
                 {% if (current_time - comment.date_posted).total_seconds() <= 3600 %} {% if
-                    comment.user_id==session.get('user_id') %} <form method="POST"
-                    action="{{ url_for('articles.delete_comment', comment_id=comment.id) }}">
-                    <button type="submit" class="btn btn-primary" style="width: 70px;height:25px;font-size: 12.5px;white-space: nowrap;overflow: hidden;  display: flex;
-                        align-items: center;
-                        justify-content: center;">Delete (1h) </button>
-                    </form>
+                    comment.user_id==session.get('user_id') %} <button type="button"
+                    class="btn btn-primary delete-comment-btn" data-comment-id="{{ comment.id }}"
+                    style="width: 85px; height: 25px; font-size: 12px;">
+                    Delete (1h)
+                    </button>
                     {% endif %}
                     {% endif %}
             </li>
             {% endfor %}
         </ul>
+
         {% if request.args.get('error_message') %}
         <div class="alert alert-danger" style="width:500px;">{{ request.args.get('error_message') }}</div>
         {% endif %}
-        <form method="POST" action="{{ url_for('articles.add_comment', article_id=article.id) }}">
+
+        <form id="comment-form">
             <input class='form-control' style="width:500px; height:40px;" name="content" id="comment-input"
-                placeholder="Add a comment"></input>
-            <button class='btn btn-primary mt-2' type="submit" id="post-comment-btn">Post Comment</button>
+                placeholder="Add a comment">
+            <button class='btn btn-primary mt-2' type="button" id="post-comment-btn"
+                data-article-id="{{ article.id }}">Post Comment</button>
         </form>
     </div>
+
 </div>
+<script src="{{ url_for('static', filename='js/comment.js') }}"></script>
 {% endblock %}
