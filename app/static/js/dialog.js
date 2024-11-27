@@ -8,8 +8,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const messagesContainer = document.getElementById('messages');
     const messageInput = document.getElementById('message-input');
 
+    if (performance.getEntriesByType('navigation')[0].type === 'reload') {
+        window.location.href = '/dialog';
+        return;
+    }
+
     socket.on('connect', function () {
-        socket.emit('join_room', { room: room });
+        socket.emit('join_room', { room: room, recipient_id: recipientId });
     });
 
     socket.on('receive_message', function (data) {
@@ -17,19 +22,38 @@ document.addEventListener('DOMContentLoaded', function () {
         messageElement.classList.add('message-item');
         if (String(data.sender) === String(sender)) {
             messageElement.classList.add('sent');
-            messageElement.innerHTML = `<strong>You:</strong> ${data.content} <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>`;
+            messageElement.innerHTML = `
+                <strong>You:</strong> ${data.content} 
+                <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
+                <span class="read-status">${data.read ? 'Read' : ''}</span>
+            `;
         } else {
             messageElement.classList.add('received');
-            messageElement.innerHTML = `<strong>${data.sender_username}:</strong> ${data.content} <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>`;
-        }
+            messageElement.innerHTML = `
+                <strong>${data.sender_username}:</strong> ${data.content} 
+                <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
+            `;
 
+            socket.emit('mark_as_read', {
+                message_id: data.id,
+                sender_id: data.sender,
+            });
+        }
 
         messagesContainer.appendChild(messageElement);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
 
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    socket.on('update_message_status', function (data) {
+        if (data.status === 'read') {
+            const readElements = document.querySelectorAll('.read-status');
+            readElements.forEach((el) => {
+                el.textContent = 'Read';
+            });
+        }
+    });
 
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
     document.getElementById('message-form').addEventListener('submit', function (event) {
         event.preventDefault();

@@ -10,7 +10,7 @@ Chat with {{ recipient.username }}
 <div id="messages" class="message-container" data-room="{{ room }}" data-sender="{{ session['user_id'] }}"
     data-recipient="{{ recipient.id }}">
     {% for message in messages %}
-    <div class="message-item">
+    <div class="message-item" data-id="{{ message.id }}">
         <strong class="message-sender">
             {{ 'You' if message.sender_id == session['user_id'] else message.sender.username }}:
         </strong>
@@ -18,11 +18,15 @@ Chat with {{ recipient.username }}
         <span class="message-time" style="right: 0; bottom: 0; position: absolute;">
             {{ message.timestamp.strftime('%H:%M %d/%m') }}
         </span>
+
+        {% if message.sender_id == session['user_id'] %}
+        {% if message.read %}
+        <span class="read-status">Read</span>
+        {% endif %}
+        {% endif %}
     </div>
     {% endfor %}
 </div>
-
-
 
 <form id="message-form" class="message-form">
     <textarea id="message-input" name="content" class="message-input" required></textarea>

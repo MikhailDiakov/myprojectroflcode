@@ -653,4 +653,17 @@ body.light .dialog-last-message {
     white-space: nowrap;
     font-family: 'Arial', sans-serif;
     display: inline-block;
+
+}
+
+.read-status {
+    font-size: 0.8rem;
+    color: rgba(0, 0, 0, 0.3);
+    display: inline-block;
+    /* Чтобы не растягивался на всю ширину */
+    margin-left: 8px;
+    /* Отступ от текста сообщения */
+    /* Начальный стиль, скрыть */
+    transition: opacity 0.3s ease-in-out;
+    /* Плавное появление */
 }
