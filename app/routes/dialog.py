@@ -17,26 +17,37 @@ def dialogs():
         return redirect(url_for('auth.login'))  
 
     sender_id = session['user_id']
+    
     users = db.session.query(User).join(Message, (Message.sender_id == User.id) | (Message.recipient_id == User.id)) \
                                 .filter((Message.sender_id == sender_id) | (Message.recipient_id == sender_id)) \
                                 .filter(User.id != sender_id).distinct() \
                                 .all()
 
     last_messages = {}
+    
     for user in users:
         last_message = Message.query.filter(
             (Message.sender_id == user.id) | (Message.recipient_id == user.id)
         ).order_by(Message.timestamp.desc()).first()
 
         if last_message:
+            unread_count = Message.query.filter(
+                (Message.sender_id == user.id) & 
+                (Message.recipient_id == sender_id) & 
+                (Message.read == False)
+            ).count()
+            
             last_messages[user.id] = {
-                'content': last_message.content,  
-                'sender': last_message.sender,    
-                'timestamp': last_message.timestamp  
+                'content': last_message.content,
+                'sender': last_message.sender,
+                'timestamp': last_message.timestamp,
+                'unread_count': unread_count,
+                'sender_id': user.id
             }
-        
 
     return render_template('dialog/dialogs.html', users=users, last_messages=last_messages)
+
+
 
 @dialog_bp.route('/<username>')
 def dialog(username):
@@ -105,6 +116,13 @@ def handle_send_message(data):
         sender_username = User.query.get(sender_id).username
         recipient_username = User.query.get(recipient_id).username
 
+        unread_count = Message.query.filter_by(
+            recipient_id=recipient_id,
+            sender_id=sender_id,
+            read=False
+        ).count()
+
+
         emit('receive_message', {
             'id': message.id, 
             'sender': sender_id,
@@ -114,6 +132,14 @@ def handle_send_message(data):
             'timestamp': message.timestamp.strftime('%H:%M %d/%m'),
             'read': False
         }, room=room)
+        emit('update_last_message', {
+    'sender_id': sender_id,
+    'recipient_id': recipient_id,
+    'content': content,
+    'timestamp': message.timestamp.strftime('%H:%M %d/%m'),
+    'unread_count': unread_count
+}, broadcast=True)
+
 
 @socketio.on('mark_as_read')
 def handle_mark_as_read(data):
