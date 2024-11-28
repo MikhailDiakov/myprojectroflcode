@@ -47,7 +47,6 @@ def dialog(username):
     recipient = User.query.filter_by(username=username).first_or_404() 
 
     room = f"chat_{min(sender_id, recipient.id)}_{max(sender_id, recipient.id)}"
-    print('ROOM',room)
 
     messages = Message.query.filter(
         ((Message.sender_id == sender_id) & (Message.recipient_id == recipient.id)) |
@@ -65,7 +64,6 @@ def handle_join_room(data):
     if user_id and room:
         active_users[user_id].add(request.sid)
         join_room(room)
-        print(f"User {user_id} joined room {room}")
 
         recipient_id = data.get('recipient_id')
         if recipient_id:
@@ -73,22 +71,9 @@ def handle_join_room(data):
                 .update({'read': True})
             db.session.commit()
 
-            emit('update_message_status', {'status': 'read', 'user_id': user_id}, room=room)
+            emit('update_message_status', {'status': 'read', 'sender_id': user_id}, room=room)
     else:
         print("Room not provided or user not authenticated")
-
-@socketio.on('leave_room')
-def handle_leave_room(data):
-    user_id = session.get('user_id')
-    room = data.get('room')
-
-    if user_id and room:
-        active_users[user_id].discard(request.sid)
-        leave_room(room)
-        print(f"User {user_id} left room {room}")
-    
-    if not active_users[user_id]:
-        del active_users[user_id]
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -134,15 +119,18 @@ def handle_send_message(data):
 def handle_mark_as_read(data):
     user_id = session.get('user_id')
     message_id = data.get('message_id')
-    print('Принимает',user_id)
-
-    if user_id and message_id:
-        message = Message.query.filter_by(id=message_id, recipient_id=user_id, read=False).first()
+    sender_id = data.get('sender_id') 
+    if user_id and message_id and sender_id:
+        message = Message.query.filter_by(id=message_id, recipient_id=user_id, sender_id=sender_id, read=False).first()
         if message:
             message.read = True
             db.session.commit()
 
             emit('update_message_status', {
-                'message_id': message_id,
+                'message_id': message.id, 
                 'status': 'read',
-            }, room=f"chat_{min(message.sender_id, message.recipient_id)}_{max(message.sender_id, message.recipient_id)}")
+                'recipient_id': '',
+                'sender_id': '',
+            }, room=f"chat_{min(sender_id, user_id)}_{max(sender_id, user_id)}")
+
+

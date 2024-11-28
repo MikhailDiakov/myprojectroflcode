@@ -18,13 +18,12 @@ Chat with {{ recipient.username }}
         <span class="message-time" style="right: 0; bottom: 0; position: absolute;">
             {{ message.timestamp.strftime('%H:%M %d/%m') }}
         </span>
-
         {% if message.sender_id == session['user_id'] %}
-        {% if message.read %}
-        <span class="read-status">Read</span>
-        {% endif %}
+        <span class="read-status">{{ 'Read' if message.read else '' }}</span>
         {% endif %}
     </div>
+
+
     {% endfor %}
 </div>
 

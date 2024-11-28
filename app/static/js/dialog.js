@@ -45,7 +45,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     socket.on('update_message_status', function (data) {
-        if (data.status === 'read') {
+        const userId = document.getElementById('messages').dataset.sender;
+        console.log(data);
+        console.log(data.sender_id);
+        console.log(userId);
+        if (data.status === 'read' && (String(data.sender_id) !== String(userId) || data.sender_id === '')) {
             const readElements = document.querySelectorAll('.read-status');
             readElements.forEach((el) => {
                 el.textContent = 'Read';
