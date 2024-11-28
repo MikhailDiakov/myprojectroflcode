@@ -21,12 +21,17 @@ Dialogs
     
             <span class="dialog-last-message">
                 {% if last_messages[user.id] %}
-                    {{ 'You' if last_messages[user.id].sender.username == session['username'] else ''}}
+                    {% if last_messages[user.id].sender.username == session['username'] %}
+                        {{ 'You' }}: 
+                    {% else %}
+                        {{ '' }}
+                    {% endif %}
                     {{ last_messages[user.id].content }}
                 {% else %}
                     No messages yet.
                 {% endif %}
             </span>
+            
     
             <span class="message-time">
                 {% if last_messages[user.id] %}
@@ -55,20 +60,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const currentUserId = document.getElementById('messages').dataset.sender;
 
     socket.on('update_last_message', function (data) {
-        const { sender_id, recipient_id, content, timestamp, unread_count } = data;
+        console.log(data)
+        console.log(currentUserId)
 
-        if (recipient_id === currentUserId) {
-            const dialogItem = document.querySelector(`#dialog-user-${sender_id}`);
+        if (data.recipient_id === currentUserId) {
+            const dialogItem = document.querySelector(`#dialog-user-${data.sender_id}`);
             if (dialogItem) {
                 const lastMessageElement = dialogItem.querySelector('.dialog-last-message');
-                lastMessageElement.textContent = `${content}`;
+                lastMessageElement.textContent = `${data.content}`;
 
                 const timestampElement = dialogItem.querySelector('.message-time');
-                timestampElement.textContent = timestamp;
+                timestampElement.textContent = data.timestamp;
 
                 const unreadCountElement = dialogItem.querySelector('.unread-count');
                 if (unreadCountElement) {
-                    unreadCountElement.textContent = unread_count > 0 ? unread_count : '';
+                    unreadCountElement.textContent = data.unread_count > 0 ? data.unread_count : '';
                 }
             }
         }

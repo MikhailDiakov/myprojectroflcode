@@ -17,7 +17,6 @@ def dialogs():
         return redirect(url_for('auth.login'))  
 
     sender_id = session['user_id']
-    
     users = db.session.query(User).join(Message, (Message.sender_id == User.id) | (Message.recipient_id == User.id)) \
                                 .filter((Message.sender_id == sender_id) | (Message.recipient_id == sender_id)) \
                                 .filter(User.id != sender_id).distinct() \
@@ -27,7 +26,8 @@ def dialogs():
     
     for user in users:
         last_message = Message.query.filter(
-            (Message.sender_id == user.id) | (Message.recipient_id == user.id)
+            ((Message.sender_id == user.id) & (Message.recipient_id == sender_id)) | 
+            ((Message.sender_id == sender_id) & (Message.recipient_id == user.id))
         ).order_by(Message.timestamp.desc()).first()
 
         if last_message:
@@ -44,10 +44,10 @@ def dialogs():
                 'unread_count': unread_count,
                 'sender_id': user.id
             }
+    
+    sorted_users = sorted(users, key=lambda u: last_messages[u.id]['timestamp'] if u.id in last_messages else 0, reverse=True)
 
-    return render_template('dialog/dialogs.html', users=users, last_messages=last_messages)
-
-
+    return render_template('dialog/dialogs.html', users=sorted_users, last_messages=last_messages)
 
 @dialog_bp.route('/<username>')
 def dialog(username):
