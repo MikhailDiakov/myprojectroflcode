@@ -660,10 +660,11 @@ body.light .dialog-last-message {
     font-size: 0.8rem;
     color: rgba(0, 0, 0, 0.3);
     display: inline-block;
-    /* Чтобы не растягивался на всю ширину */
     margin-left: 8px;
-    /* Отступ от текста сообщения */
-    /* Начальный стиль, скрыть */
     transition: opacity 0.3s ease-in-out;
-    /* Плавное появление */
+}
+
+.dialog-item.unread {
+    background-color: rgba(128, 128, 128, 0.1);
+    border-left: 4px solid rgba(128, 128, 128, 0.5);
 }

@@ -115,6 +115,7 @@ def handle_send_message(data):
 
         sender_username = User.query.get(sender_id).username
         recipient_username = User.query.get(recipient_id).username
+        avatar_url = User.query.get(sender_id).avatar_url
 
         unread_count = Message.query.filter_by(
             recipient_id=recipient_id,
@@ -134,6 +135,8 @@ def handle_send_message(data):
         }, room=room)
         emit('update_last_message', {
     'sender_id': sender_id,
+    'sender_username': sender_username,
+    'avatar': avatar_url,
     'recipient_id': recipient_id,
     'content': content,
     'timestamp': message.timestamp.strftime('%H:%M %d/%m'),

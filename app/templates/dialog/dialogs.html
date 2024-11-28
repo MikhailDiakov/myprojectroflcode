@@ -5,84 +5,101 @@ Dialogs
 {% endblock %}
 
 {% block body %}
-<div id="messages" 
-     data-sender="{{ session['user_id'] }}" 
-     data-sender_username="{{ session['username'] }}"
-</div>
-<h1 class="page-title">Dialogs</h1>
-<ul class="dialog-list">
-    {% for user in users %}
-    <li class="dialog-item" id="dialog-user-{{ user.id }}">
-        <div class="dialog-row">
-            <a href="{{ url_for('auth.user_profile', username=user.username) }}">
-                <img src="{{ url_for('static', filename=user.avatar_url) }}" alt="Avatar" class="dialog-avatar">
-            </a>
-            <a href="{{ url_for('dialog.dialog', username=user.username) }}" class="dialog-link">{{ user.username }}</a>
-    
-            <span class="dialog-last-message">
-                {% if last_messages[user.id] %}
+<div id="messages" data-sender="{{ session['user_id'] }}" data-sender_username="{{ session['username'] }}" </div>
+    <h1 class="page-title">Dialogs</h1>
+    <ul class="dialog-list">
+        {% for user in users %}
+        <li class="dialog-item{% if last_messages[user.id] and last_messages[user.id].unread_count > 0 %} unread{% endif %}"
+            id="dialog-user-{{ user.id }}">
+            <div class="dialog-row">
+                <a href="{{ url_for('auth.user_profile', username=user.username) }}">
+                    <img src="{{ url_for('static', filename=user.avatar_url) }}" alt="Avatar" class="dialog-avatar">
+                </a>
+                <a href="{{ url_for('dialog.dialog', username=user.username) }}" class="dialog-link">{{ user.username
+                    }}</a>
+
+                <span class="dialog-last-message">
+                    {% if last_messages[user.id] %}
                     {% if last_messages[user.id].sender.username == session['username'] %}
-                        {{ 'You' }}: 
+                    {{ 'You' }}:
                     {% else %}
-                        {{ '' }}
+                    {{ '' }}
                     {% endif %}
                     {{ last_messages[user.id].content }}
-                {% else %}
+                    {% else %}
                     No messages yet.
-                {% endif %}
-            </span>
-            
-    
-            <span class="message-time">
-                {% if last_messages[user.id] %}
+                    {% endif %}
+                </span>
+
+
+                <span class="message-time">
+                    {% if last_messages[user.id] %}
                     {{ last_messages[user.id].timestamp.strftime('%H:%M %d/%m') }}
-                {% else %}
+                    {% else %}
                     No messages yet.
-                {% endif %}
-            </span>
-    
-            <span class="unread-count">
-                {% if last_messages[user.id] %}
+                    {% endif %}
+                </span>
+
+                <span class="unread-count">
+                    {% if last_messages[user.id] %}
                     {{ last_messages[user.id].unread_count if last_messages[user.id].unread_count > 0 else '' }}
-                {% else %}
+                    {% else %}
                     0
-                {% endif %}
-            </span>
-        </div>
-    </li>
-    
-    {% endfor %}
-</ul>
-<script src="//cdn.socket.io/4.0.0/socket.io.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const socket = io();
-    const currentUserId = document.getElementById('messages').dataset.sender;
+                    {% endif %}
+                </span>
+            </div>
+        </li>
 
-    socket.on('update_last_message', function (data) {
-        console.log(data)
-        console.log(currentUserId)
+        {% endfor %}
+    </ul>
+    <script src="//cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const socket = io();
+            const currentUserId = document.getElementById('messages').dataset.sender;
 
-        if (data.recipient_id === currentUserId) {
-            const dialogItem = document.querySelector(`#dialog-user-${data.sender_id}`);
-            if (dialogItem) {
-                const lastMessageElement = dialogItem.querySelector('.dialog-last-message');
-                lastMessageElement.textContent = `${data.content}`;
-
-                const timestampElement = dialogItem.querySelector('.message-time');
-                timestampElement.textContent = data.timestamp;
-
-                const unreadCountElement = dialogItem.querySelector('.unread-count');
-                if (unreadCountElement) {
-                    unreadCountElement.textContent = data.unread_count > 0 ? data.unread_count : '';
-                }
-
+            socket.on('update_last_message', function (data) {
                 const dialogList = document.querySelector('.dialog-list');
-                dialogList.prepend(dialogItem);
-            }
-        }
-    });
-});
-</script>
+                let dialogItem = document.querySelector(`#dialog-user-${data.sender_id}`);
 
-{% endblock %}
+                if (!dialogItem) {
+                    dialogItem = document.createElement('li');
+                    dialogItem.className = 'dialog-item';
+                    dialogItem.id = `dialog-user-${data.sender_id}`;
+                    dialogItem.innerHTML = `
+                <div class="dialog-row">
+                    <a href="/auth/profile/${data.sender_username}">
+                        <img src="/static/${data.avatar}" alt="Avatar" class="dialog-avatar">
+                    </a>
+                    <a href="/dialog/${data.sender_username}" class="dialog-link">${data.sender_username}</a>
+                    <span class="dialog-last-message">${data.content}</span>
+                    <span class="message-time">${data.timestamp}</span>
+                    <span class="unread-count">${data.unread_count > 0 ? data.unread_count : ''}</span>
+                </div>
+            `;
+                    dialogList.prepend(dialogItem);
+                } else {
+                    const lastMessageElement = dialogItem.querySelector('.dialog-last-message');
+                    lastMessageElement.textContent = `${data.content}`;
+
+                    const timestampElement = dialogItem.querySelector('.message-time');
+                    timestampElement.textContent = data.timestamp;
+
+                    const unreadCountElement = dialogItem.querySelector('.unread-count');
+                    if (unreadCountElement) {
+                        unreadCountElement.textContent = data.unread_count > 0 ? data.unread_count : '';
+                        if (data.unread_count > 0) {
+                            dialogItem.classList.add('unread');
+                        } else {
+                            dialogItem.classList.remove('unread');
+                        }
+                    }
+
+                    dialogList.prepend(dialogItem);
+                }
+            });
+        });
+
+    </script>
+
+    {% endblock %}
