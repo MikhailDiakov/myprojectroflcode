@@ -5,101 +5,128 @@ Dialogs
 {% endblock %}
 
 {% block body %}
-<div id="messages" data-sender="{{ session['user_id'] }}" data-sender_username="{{ session['username'] }}" </div>
-    <h1 class="page-title">Dialogs</h1>
-    <ul class="dialog-list">
-        {% for user in users %}
-        <li class="dialog-item{% if last_messages[user.id] and last_messages[user.id].unread_count > 0 %} unread{% endif %}"
-            id="dialog-user-{{ user.id }}">
-            <div class="dialog-row">
-                <a href="{{ url_for('auth.user_profile', username=user.username) }}">
-                    <img src="{{ url_for('static', filename=user.avatar_url) }}" alt="Avatar" class="dialog-avatar">
-                </a>
-                <a href="{{ url_for('dialog.dialog', username=user.username) }}" class="dialog-link">{{ user.username
-                    }}</a>
-
-                <span class="dialog-last-message">
-                    {% if last_messages[user.id] %}
-                    {% if last_messages[user.id].sender.username == session['username'] %}
-                    {{ 'You' }}:
-                    {% else %}
-                    {{ '' }}
-                    {% endif %}
-                    {{ last_messages[user.id].content }}
-                    {% else %}
-                    No messages yet.
-                    {% endif %}
-                </span>
-
-
-                <span class="message-time">
-                    {% if last_messages[user.id] %}
-                    {{ last_messages[user.id].timestamp.strftime('%H:%M %d/%m') }}
-                    {% else %}
-                    No messages yet.
-                    {% endif %}
-                </span>
-
-                <span class="unread-count">
-                    {% if last_messages[user.id] %}
-                    {{ last_messages[user.id].unread_count if last_messages[user.id].unread_count > 0 else '' }}
-                    {% else %}
-                    0
-                    {% endif %}
+<div id="messages" data-sender="{{ session['user_id'] }}" data-sender_username="{{ session['username'] }}"></div>
+<h1 class="page-title">Dialogs</h1>
+<ul class="dialog-list">
+    {% for user in users %}
+    <li class="dialog-item{% if last_messages[user.id] and last_messages[user.id].unread_count > 0 %} unread{% endif %}"
+        id="dialog-user-{{ user.id }}">
+        <div class="dialog-row">
+            <a href="{{ url_for('auth.user_profile', username=user.username) }}">
+                <img src="{{ url_for('static', filename=user.avatar_url) }}" alt="Avatar" class="dialog-avatar">
+            </a>
+            <div class="username-status-container">
+                <a href="{{ url_for('dialog.dialog', username=user.username) }}" class="dialog-link">{{ user.username }}</a>
+                
+                <span id="status-indicator-{{ user.id }}" class="status-indicator 
+                    {% if last_messages[user.id].is_online %} online {% else %} offline {% endif %}" 
+                    style="margin-left: 10px;">
                 </span>
             </div>
-        </li>
+        
+      
 
-        {% endfor %}
-    </ul>
-    <script src="//cdn.socket.io/4.0.0/socket.io.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const socket = io();
-            const currentUserId = document.getElementById('messages').dataset.sender;
+            <span class="dialog-last-message">
+                {% if last_messages[user.id] %}
+                    {% if last_messages[user.id].sender.username == session['username'] %}
+                        {{ 'You' }}:
+                    {% else %}
+                        {{ '' }}
+                    {% endif %}
+                    {{ last_messages[user.id].content }}
+                {% else %}
+                    No messages yet.
+                {% endif %}
+            </span>
 
-            socket.on('update_last_message', function (data) {
-                const dialogList = document.querySelector('.dialog-list');
-                let dialogItem = document.querySelector(`#dialog-user-${data.sender_id}`);
+            <span class="message-time">
+                {% if last_messages[user.id] %}
+                    {{ last_messages[user.id].timestamp.strftime('%H:%M %d/%m') }}
+                {% else %}
+                    No messages yet.
+                {% endif %}
+            </span>
 
-                if (!dialogItem) {
-                    dialogItem = document.createElement('li');
-                    dialogItem.className = 'dialog-item';
-                    dialogItem.id = `dialog-user-${data.sender_id}`;
-                    dialogItem.innerHTML = `
-                <div class="dialog-row">
-                    <a href="/auth/profile/${data.sender_username}">
-                        <img src="/static/${data.avatar}" alt="Avatar" class="dialog-avatar">
-                    </a>
-                    <a href="/dialog/${data.sender_username}" class="dialog-link">${data.sender_username}</a>
-                    <span class="dialog-last-message">${data.content}</span>
-                    <span class="message-time">${data.timestamp}</span>
-                    <span class="unread-count">${data.unread_count > 0 ? data.unread_count : ''}</span>
-                </div>
-            `;
-                    dialogList.prepend(dialogItem);
-                } else {
-                    const lastMessageElement = dialogItem.querySelector('.dialog-last-message');
-                    lastMessageElement.textContent = `${data.content}`;
+            <span class="unread-count">
+                {% if last_messages[user.id] %}
+                    {{ last_messages[user.id].unread_count if last_messages[user.id].unread_count > 0 else '' }}
+                {% else %}
+                    0
+                {% endif %}
+            </span>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
 
-                    const timestampElement = dialogItem.querySelector('.message-time');
-                    timestampElement.textContent = data.timestamp;
+<script src="//cdn.socket.io/4.0.0/socket.io.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const socket = io();
+        const currentUserId = document.getElementById('messages').dataset.sender;
+        let statusTimeout = null;
 
-                    const unreadCountElement = dialogItem.querySelector('.unread-count');
-                    if (unreadCountElement) {
-                        unreadCountElement.textContent = data.unread_count > 0 ? data.unread_count : '';
-                        if (data.unread_count > 0) {
-                            dialogItem.classList.add('unread');
-                        } else {
-                            dialogItem.classList.remove('unread');
-                        }
-                    }
-
-                    dialogList.prepend(dialogItem);
+        socket.on('status_update', function (data) {
+            const statusElement = document.getElementById(`status-indicator-${data.user_id}`);
+            if (statusElement) {
+                if (statusTimeout) {
+                    clearTimeout(statusTimeout);
                 }
-            });
+
+                statusTimeout = setTimeout(function () {
+                    if (data.status === 'online') {
+                        statusElement.style.backgroundColor = 'green'; 
+                    } else if (data.status === 'offline') {
+                        statusElement.style.backgroundColor = 'red'; 
+                    }
+                }, 2000);  
+            }
         });
 
-    </script>
+        socket.on('update_last_message', function (data) {
+            const dialogList = document.querySelector('.dialog-list');
+            let dialogItem = document.querySelector(`#dialog-user-${data.sender_id}`);
 
-    {% endblock %}
+            if (!dialogItem) {
+                dialogItem = document.createElement('li');
+                dialogItem.className = 'dialog-item';
+                dialogItem.id = `dialog-user-${data.sender_id}`;
+                dialogItem.innerHTML = `
+                    <div class="dialog-row">
+                        <a href="/auth/profile/${data.sender_username}">
+                            <img src="/static/${data.avatar}" alt="Avatar" class="dialog-avatar">
+                        </a>
+                        <a href="/dialog/${data.sender_username}" class="dialog-link">${data.sender_username}</a>
+                        <span id="status-indicator-${data.sender_id}" class="status-indicator" 
+                            style="width: 10px; height: 10px; border-radius: 50%; margin-left: 0px;">
+                            ${data.is_online ? '<span style="background-color: green;"></span>' : '<span style="background-color: red;"></span>'}
+                        </span>
+                        <span class="dialog-last-message">${data.content}</span>
+                        <span class="message-time">${data.timestamp}</span>
+                        <span class="unread-count">${data.unread_count > 0 ? data.unread_count : ''}</span>
+                    </div>
+                `;
+                dialogList.prepend(dialogItem);
+            } else {
+                const lastMessageElement = dialogItem.querySelector('.dialog-last-message');
+                lastMessageElement.textContent = `${data.content}`;
+
+                const timestampElement = dialogItem.querySelector('.message-time');
+                timestampElement.textContent = data.timestamp;
+
+                const unreadCountElement = dialogItem.querySelector('.unread-count');
+                if (unreadCountElement) {
+                    unreadCountElement.textContent = data.unread_count > 0 ? data.unread_count : '';
+                    if (data.unread_count > 0) {
+                        dialogItem.classList.add('unread');
+                    } else {
+                        dialogItem.classList.remove('unread');
+                    }
+                }
+
+                dialogList.prepend(dialogItem);
+            }
+        });
+    });
+</script>
+{% endblock %}

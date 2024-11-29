@@ -3,6 +3,8 @@ from werkzeug.utils import secure_filename
 import os
 from ..models import User, db, Article
 import re
+from .. import socketio
+from flask_socketio import emit
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -146,3 +148,14 @@ def reset_avatar():
     db.session.commit()
 
     return redirect(url_for('auth.user_profile', username=user.username))
+
+@socketio.on('user_connected_to_site')
+def handle_user_connected_to_site():
+    user_id = session.get('user_id')
+    if user_id:
+        user = User.query.get(user_id)
+        if user:
+            user.is_online = True
+            db.session.commit()
+
+        emit('status_update', {'user_id': user_id, 'status': 'online'}, broadcast=True)

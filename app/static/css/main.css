@@ -668,3 +668,25 @@ body.light .dialog-last-message {
     background-color: rgba(128, 128, 128, 0.1);
     border-left: 4px solid rgba(128, 128, 128, 0.5);
 }
+
+.username-status-container {
+    display: flex;
+    align-items: center;
+    margin-left: 0px;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    transition: background-color 0.5s ease;
+    margin-left: 0px; 
+}
+
+.status-indicator.online {
+    background-color: green; 
+}
+
+.status-indicator.offline {
+    background-color: red;
+}

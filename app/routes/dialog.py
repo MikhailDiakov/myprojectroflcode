@@ -4,6 +4,10 @@ from ..models import User, Message, db
 from datetime import datetime
 from .. import socketio
 from collections import defaultdict
+import time
+from threading import Timer
+
+user_last_activity = {}
 
 dialog_bp = Blueprint('dialog', __name__, url_prefix='/dialog')
 active_users = defaultdict(set)
@@ -23,7 +27,7 @@ def dialogs():
                                 .all()
 
     last_messages = {}
-    
+
     for user in users:
         last_message = Message.query.filter(
             ((Message.sender_id == user.id) & (Message.recipient_id == sender_id)) | 
@@ -42,12 +46,14 @@ def dialogs():
                 'sender': last_message.sender,
                 'timestamp': last_message.timestamp,
                 'unread_count': unread_count,
-                'sender_id': user.id
+                'sender_id': user.id,
+                'is_online': user.is_online 
             }
-    
+
     sorted_users = sorted(users, key=lambda u: last_messages[u.id]['timestamp'] if u.id in last_messages else 0, reverse=True)
 
     return render_template('dialog/dialogs.html', users=sorted_users, last_messages=last_messages)
+
 
 @dialog_bp.route('/<username>')
 def dialog(username):
@@ -90,6 +96,12 @@ def handle_join_room(data):
 def handle_disconnect():
     user_id = session.get('user_id')
     if user_id:
+        user = User.query.get(user_id)
+        if user:
+            user.is_online = False
+            db.session.commit()
+
+        emit('status_update', {'user_id': user_id, 'status': 'offline'}, broadcast=True)
         active_users[user_id].discard(request.sid)
         if not active_users[user_id]:
             del active_users[user_id]
