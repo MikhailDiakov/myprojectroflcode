@@ -20,29 +20,34 @@ document.addEventListener('DOMContentLoaded', function () {
     socket.on('receive_message', function (data) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message-item');
+        
         if (String(data.sender) === String(sender)) {
             messageElement.classList.add('sent');
             messageElement.innerHTML = `
                 <strong>You:</strong> ${data.content} 
+                 ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
                 <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
                 <span class="read-status">${data.read ? 'Read' : ''}</span>
             `;
         } else {
             messageElement.classList.add('received');
             messageElement.innerHTML = `
-                <strong>${data.sender_username}:</strong> ${data.content} 
+                <strong>${data.sender_username}:</strong> ${data.content}
+                 ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
                 <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
             `;
-
+    
             socket.emit('mark_as_read', {
                 message_id: data.id,
                 sender_id: data.sender,
             });
         }
-
+    
         messagesContainer.appendChild(messageElement);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
+    
+    
 
     socket.on('update_message_status', function (data) {
         const userId = document.getElementById('messages').dataset.sender;
@@ -98,6 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const existingTypingIndicator = document.getElementById('typing-indicator');
     
         if (String(data.sender_id) !== String(sender)) { 
+
             if (!existingTypingIndicator) {
                 const typingElement = document.createElement('div');
                 typingElement.id = 'typing-indicator';
@@ -115,11 +121,69 @@ document.addEventListener('DOMContentLoaded', function () {
                 const typingElement = document.getElementById('typing-indicator');
                 if (typingElement) {
                     typingElement.remove();
-                }
+                }   
                 typingTimeout = null; 
             }, 2000);
         }
     });
+document.getElementById('emoji-button').addEventListener('click', function () {
+    const emojiMenu = document.getElementById('emoji-menu');
+    const photoMenu = document.getElementById('photo-menu');
     
-      
+    emojiMenu.style.display = emojiMenu.style.display === 'none' || emojiMenu.style.display === '' ? 'block' : 'none';
+    photoMenu.style.display = 'none'; 
+});
+
+document.querySelectorAll('.emoji').forEach(function (button) {
+    button.addEventListener('click', function () {
+        const emoji = button.textContent;
+        messageInput.value += emoji;
+        document.getElementById('emoji-menu').style.display = 'none';  
+    });
+});
+
+document.getElementById('close-emoji-menu').addEventListener('click', function () {
+    document.getElementById('emoji-menu').style.display = 'none';  
+});
+
+document.getElementById('photo-button').addEventListener('click', function () {
+    const photoMenu = document.getElementById('photo-menu');
+    const emojiMenu = document.getElementById('emoji-menu');
+    
+    photoMenu.style.display = photoMenu.style.display === 'none' || photoMenu.style.display === '' ? 'block' : 'none';
+    emojiMenu.style.display = 'none';  
+});
+
+document.getElementById('send-photo').addEventListener('click', function () {
+    const photoInput = document.getElementById('photo-upload');
+    const file = photoInput.files[0];
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const photoDataUrl = e.target.result;  
+
+            socket.emit('send_message', {
+                room: room,
+                sender: sender,
+                recipient_id: recipientId,
+                content: '',  
+                photo: photoDataUrl,
+            });
+            document.getElementById('photo-menu').style.display = 'none';
+            photoInput.value = '';  
+            document.getElementById('file-name').textContent = 'No file selected'; 
+        };
+        reader.readAsDataURL(file);
+    } else {
+        alert('Please select an image to send.');
+    }
+});
+document.getElementById('photo-upload').addEventListener('change', function() {
+    const fileName = this.files[0] ? this.files[0].name : 'No file selected';
+    document.getElementById('file-name').textContent = fileName;
+});
+document.getElementById('close-photo-menu').addEventListener('click', function() {
+    document.getElementById('photo-menu').style.display = 'none';
+});
 });

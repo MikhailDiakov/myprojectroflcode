@@ -14,22 +14,73 @@ Chat with {{ recipient.username }}
         <strong class="message-sender">
             {{ 'You' if message.sender_id == session['user_id'] else message.sender.username }}:
         </strong>
-        <span class="message-content">{{ message.content }}</span>
+        
+
+        <span class="message-content">
+            {% if message.content %}
+                {{ message.content }}
+            {% endif %}
+
+            {% if message.photo_url %}
+            <div class="message-photo">
+                <img src="{{ url_for('static', filename=message.photo_url.split('static/', 1)[-1]) }}"
+                     alt="Message photo" class="photo" />
+            </div>
+        {% endif %}
+        
+        </span>
+        
         <span class="message-time" style="right: 0; bottom: 0; position: absolute;">
             {{ message.timestamp.strftime('%H:%M %d/%m') }}
         </span>
+        
         {% if message.sender_id == session['user_id'] %}
         <span class="read-status">{{ 'Read' if message.read else '' }}</span>
         {% endif %}
     </div>
     {% endfor %}
 </div>
+
 <div id="typing-indicator-container"></div>
 
 <form id="message-form" class="message-form">
-    <textarea id="message-input" name="content" class="message-input" required></textarea>
-    <button type="submit" class="btn btn-primary">Send</button>
+    <textarea id="message-input" name="content" class="message-input" placeholder="Type a message..." required></textarea>
+    
+    <div class="button-container">
+        <button id="emoji-button" type="button" class="chat-button">😊</button>
+        <button id="photo-button" type="button" class="chat-button">📷</button>
+        <button type="submit" class="btn btn-primary">Send</button>
+    </div>
 </form>
+
+
+<div id="emoji-menu" class="emoji-menu" style="display: none;">
+    <button class="emoji">😀</button>
+    <button class="emoji">😎</button>
+    <button class="emoji">😂</button>
+    <button class="emoji">😊</button>
+    <button class="emoji">😍</button>
+    <button class="emoji">😜</button>
+    <button class="emoji">🥳</button>
+    <button class="emoji">😭</button>
+    <button class="emoji">😅</button>
+    <button id="close-emoji-menu">X</button>
+</div>
+
+<div id="photo-menu" class="photo-menu" style="display: none;">
+    <button id="close-photo-menu" type="button" class="close-btn">×</button>
+
+    <label for="photo-upload" class="photo-upload-label">
+        Choose a photo
+        <input type="file" id="photo-upload" accept="image/*" />
+    </label>
+    
+    <p id="file-name">No file selected</p>
+    <button id="send-photo" type="button">Send Photo</button>
+</div>
+
+
+
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 <script src="/static/js/dialog.js"></script>
 {% endblock %}

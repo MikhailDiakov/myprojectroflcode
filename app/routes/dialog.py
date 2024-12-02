@@ -4,8 +4,11 @@ from ..models import User, Message, db
 from datetime import datetime
 from .. import socketio
 from collections import defaultdict
-import time
-from threading import Timer
+import base64
+from io import BytesIO
+from PIL import Image
+import os
+from werkzeug.utils import secure_filename
 
 user_last_activity = {}
 
@@ -114,11 +117,25 @@ def handle_send_message(data):
     sender_id = session.get('user_id')
     recipient_id = data.get('recipient_id')
 
-    if sender_id and recipient_id and content:
+    photo_data = data.get('photo')  
+    photo_url = None
+
+    if photo_data:
+        img_data = base64.b64decode(photo_data.split(',')[1]) 
+        image = Image.open(BytesIO(img_data))
+        
+        filename = f'{secure_filename(str(sender_id))}_{datetime.utcnow().strftime("%Y%m%d%H%M%S")}.png'
+        file_path = os.path.join('app/static/uploads/photos', filename)
+        image.save(file_path)
+        
+        photo_url = f'/static/uploads/photos/{filename}' 
+
+    if sender_id and recipient_id:
         message = Message(
             sender_id=sender_id,
             recipient_id=recipient_id,
             content=content,
+            photo_url=photo_url,
             timestamp=datetime.utcnow(),
             read=False
         )
@@ -135,25 +152,28 @@ def handle_send_message(data):
             read=False
         ).count()
 
-
         emit('receive_message', {
             'id': message.id, 
             'sender': sender_id,
             'sender_username': sender_username,
             'recipient_username': recipient_username,
             'content': content,
+            'photo_url': photo_url,  
             'timestamp': message.timestamp.strftime('%H:%M %d/%m'),
             'read': False
         }, room=room)
+
         emit('update_last_message', {
-    'sender_id': sender_id,
-    'sender_username': sender_username,
-    'avatar': avatar_url,
-    'recipient_id': recipient_id,
-    'content': content,
-    'timestamp': message.timestamp.strftime('%H:%M %d/%m'),
-    'unread_count': unread_count
-}, broadcast=True)
+            'sender_id': sender_id,
+            'sender_username': sender_username,
+            'avatar': avatar_url,
+            'recipient_id': recipient_id,
+            'content': content,
+            'photo_url': photo_url, 
+            'timestamp': message.timestamp.strftime('%H:%M %d/%m'),
+            'unread_count': unread_count
+        }, broadcast=True)
+
 
 
 @socketio.on('mark_as_read')

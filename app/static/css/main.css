@@ -524,18 +524,19 @@ header {
     word-break: break-word;
     white-space: normal;
     overflow-wrap: break-word;
+    max-width: 750px;
+    height: 500px;
 }
 
 
 
 body.dark .message-container {
-    max-width: 600px;
+    
     margin: 0 auto;
     padding: 10px;
     background-color: #333;
     border: 1px solid white;
     border-radius: 10px;
-    height: 300px;
     overflow-y: auto;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
@@ -590,13 +591,11 @@ body.light .message-input {
 }
 
 body.light .message-container {
-    max-width: 600px;
     margin: 0 auto;
     padding: 10px;
     background-color: white;
     border: 1px solid #333;
     border-radius: 10px;
-    height: 300px;
     overflow-y: auto;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
@@ -698,4 +697,241 @@ body.light .dialog-last-message {
     font-style: italic;
     color: gray;
     text-align: center;
+}
+
+#emoji-menu {
+    display: flex;
+    justify-content: space-around;
+    position: absolute;
+    bottom: 50px; 
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.emoji {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.photo-menu {
+    position: absolute;
+    bottom: 50px;
+    background: #fff;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+#photo-upload {
+    margin-bottom: 10px;
+}
+
+body.dark .emoji-menu{
+    background: #333 !important;  
+}
+
+body.light .emoji-menu{
+    background: #fff !important;  
+}
+
+.emoji-menu {
+    display: none;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid #555;
+    border-radius: 8px;
+    padding: 10px;
+    z-index: 999;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 250px;  
+    max-height: 250px;  
+    overflow-y: auto;  
+}
+
+.emoji-menu button {
+    font-size: 24px;
+    padding: 10px;
+    margin: 5px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #fff;  
+}
+
+.emoji-menu button:hover {
+    background: #444;  
+}
+
+#close-emoji-menu {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #444;
+    color: #fff;
+    border: none;
+    padding: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+#close-emoji-menu:hover {
+    background: #555;
+}
+
+.chat-button {
+    font-size: 24px;
+    background-color: #555;  
+    color: #fff; 
+    border: none;
+    border-radius: 50%;  
+    width: 50px;  
+    height: 50px;  
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;  
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+}
+
+.chat-button:hover {
+    background-color: #777;  
+    transform: scale(1.1);  
+}
+
+.chat-button:active {
+    transform: scale(0.95);  
+}
+
+#emoji-button {
+    background-color: #4CAF50;  
+}
+
+#photo-button {
+    background-color: #2196F3;  
+}
+
+    .message-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .message-input {
+        width: 100%;
+        height: 50px;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+        resize: none;
+    }
+
+    .button-container {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        align-items: center;
+    }
+
+
+    .received-photo {
+        max-width: 300px;
+        max-height: 300px;
+        margin-top: 10px;
+        border-radius: 8px;
+    }
+    
+.message-photo {
+    max-width: 100%; 
+    margin: 10px 0; 
+    text-align: left 
+}
+
+.message-photo img {
+    max-width: 500px; 
+    border-radius: 8px; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+}
+
+body.dark .photo-menu{
+    background-color: #333;
+}
+
+body.light .photo-menu{
+    background-color: #f9f9f9;
+}
+.photo-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    width: 300px;
+    margin: 0 auto;
+    text-align: center;
+    position: fixed;
+    left: 50%; 
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: #000;
+}
+
+.photo-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    color: #4CAF50;
+    margin-top: 15px;
+}
+
+#file-name {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+    font-weight: bold;
+}
+
+#send-photo {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#send-photo:hover {
+    background-color: #45a049;
+}
+
+#photo-upload {
+    display: none; 
 }
