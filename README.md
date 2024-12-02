@@ -10,16 +10,30 @@ A **prototype social network** built with Flask.
    ```bash
    git clone https://github.com/MikhailDiakov/myprojectroflcode.git
    cd myprojectroflcode
-   mkdir instance
-   touch instance/config.py
+**Open the configuration file**:  
+   Open `instance/config.py` and **replace** the `SECRET_KEY` line with your own key:
+   - For Linux/Mac:  
+     ```bash
+     nano instance/config.py
+     ```
+   - For Windows:
+     ```bash
+     notepad instance/config.py
+     ```
 
-   - FILE THIS!!!
-   class Config:
-      SECRET_KEY = 'your-secret-key'
-      SQLALCHEMY_DATABASE_URI = 'sqlite:///iambored.db'
-      SQLALCHEMY_TRACK_MODIFICATIONS = False
-   CHANGE SECRET_KEY!!!
-   ```
+   To generate a new secret key:
+   - For Linux/Mac:  
+     ```bash
+     python -c "import os; print(os.urandom(24))"
+     ```
+   - For Windows:  
+     Open **Python** and run:
+     ```python
+     import os
+     print(os.urandom(24))
+     ```
+
+   Copy the generated key and paste it in place of `'your-secret-key'`.
 
 2. **Set up a virtual environment**:  
    - For Linux/Mac:  
