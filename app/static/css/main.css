@@ -544,6 +544,7 @@ body.dark .message-container {
     margin-bottom: 0px;
     padding: 4px 0;
     position: relative;
+    word-wrap: break-word;
 }
 
 body.dark .message-sender {
@@ -689,4 +690,12 @@ body.light .dialog-last-message {
 
 .status-indicator.offline {
     background-color: red;
+}
+
+#typing-indicator-container {
+    position: relative;
+    padding: 10px;
+    font-style: italic;
+    color: gray;
+    text-align: center;
 }

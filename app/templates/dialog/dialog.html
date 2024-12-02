@@ -22,16 +22,14 @@ Chat with {{ recipient.username }}
         <span class="read-status">{{ 'Read' if message.read else '' }}</span>
         {% endif %}
     </div>
-
-
     {% endfor %}
 </div>
+<div id="typing-indicator-container"></div>
 
 <form id="message-form" class="message-form">
     <textarea id="message-input" name="content" class="message-input" required></textarea>
     <button type="submit" class="btn btn-primary">Send</button>
 </form>
-
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 <script src="/static/js/dialog.js"></script>
 {% endblock %}

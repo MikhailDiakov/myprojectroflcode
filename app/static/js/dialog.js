@@ -83,4 +83,43 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(function () {
         messageInput.focus();
     }, 100);
+    messageInput.addEventListener('input', function () {
+        if (messageInput.value.trim() !== '') {
+            socket.emit('typing', { room: room });
+        }
+    });
+    
+    let typingTimeout; 
+
+    socket.on('user_typing', function (data) {
+        console.log(data.sender_id, sender); 
+    
+        const typingIndicatorContainer = document.getElementById('typing-indicator-container');
+        const existingTypingIndicator = document.getElementById('typing-indicator');
+    
+        if (String(data.sender_id) !== String(sender)) { 
+            if (!existingTypingIndicator) {
+                const typingElement = document.createElement('div');
+                typingElement.id = 'typing-indicator';
+                typingElement.textContent = `${data.sender_username} is typing...`;
+                typingIndicatorContainer.appendChild(typingElement);
+            }
+    
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+            if (typingTimeout) {
+                clearTimeout(typingTimeout);
+            }
+    
+            typingTimeout = setTimeout(() => {
+                const typingElement = document.getElementById('typing-indicator');
+                if (typingElement) {
+                    typingElement.remove();
+                }
+                typingTimeout = null; 
+            }, 2000);
+        }
+    });
+    
+      
 });

@@ -174,4 +174,14 @@ def handle_mark_as_read(data):
                 'sender_id': '',
             }, room=f"chat_{min(sender_id, user_id)}_{max(sender_id, user_id)}")
 
+@socketio.on('typing')
+def handle_typing(data):
+    room = data['room']
+    sender_id = session.get('user_id')
+    if sender_id and room:
+        sender_username = User.query.get(sender_id).username
+        emit('user_typing', {
+            'sender_id': sender_id,
+            'sender_username': sender_username
+        }, room=room)
 
