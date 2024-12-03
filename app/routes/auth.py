@@ -5,6 +5,7 @@ from ..models import User, db, Article
 import re
 from .. import socketio
 from flask_socketio import emit
+import uuid
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -118,10 +119,10 @@ def edit_profile():
 
         avatar = request.files.get('avatar')
         if avatar and allowed_file(avatar.filename):
-            filename = secure_filename(avatar.filename)
-            avatar_path = os.path.join(UPLOAD_FOLDER, filename)
+            unique_filename = f"{uuid.uuid4().hex}_{secure_filename(avatar.filename)}"
+            avatar_path = os.path.join(UPLOAD_FOLDER, unique_filename)
             avatar.save(avatar_path)
-            user.avatar_url = f'/uploads/avatars/{filename}'  
+            user.avatar_url = f'/uploads/avatars/{unique_filename}'
             session['avatar_url'] = user.avatar_url
 
         if bio:

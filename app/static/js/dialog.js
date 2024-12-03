@@ -8,6 +8,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const messagesContainer = document.getElementById('messages');
     const messageInput = document.getElementById('message-input');
 
+    function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    setTimeout(scrollToBottom, 100);
+
     if (performance.getEntriesByType('navigation')[0].type === 'reload') {
         window.location.href = '/dialog';
         return;
@@ -75,6 +81,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             messageInput.value = '';
             messageInput.focus();
+            setTimeout(scrollToBottom, 100);
         }
     });
 
@@ -138,12 +145,13 @@ document.querySelectorAll('.emoji').forEach(function (button) {
     button.addEventListener('click', function () {
         const emoji = button.textContent;
         messageInput.value += emoji;
-        document.getElementById('emoji-menu').style.display = 'none';  
+        messageInput.focus() 
     });
 });
 
 document.getElementById('close-emoji-menu').addEventListener('click', function () {
     document.getElementById('emoji-menu').style.display = 'none';  
+    messageInput.focus()
 });
 
 document.getElementById('photo-button').addEventListener('click', function () {
@@ -186,4 +194,80 @@ document.getElementById('photo-upload').addEventListener('change', function() {
 document.getElementById('close-photo-menu').addEventListener('click', function() {
     document.getElementById('photo-menu').style.display = 'none';
 });
+messageInput.addEventListener('paste', function (event) {
+    const clipboardItems = event.clipboardData.items;
+
+    for (let i = 0; i < clipboardItems.length; i++) {
+        const item = clipboardItems[i];
+        
+        if (item.type.startsWith('image/')) {
+            const file = item.getAsFile();
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const photoDataUrl = e.target.result;
+
+                socket.emit('send_message', {
+                    room: room,
+                    sender: sender,
+                    recipient_id: recipientId,
+                    content: '', 
+                    photo: photoDataUrl,
+                });
+                setTimeout(scrollToBottom, 100); 
+            };
+
+            reader.readAsDataURL(file);
+            break; 
+        }
+    }
+});
+document.addEventListener('dragenter', (event) => {
+    event.preventDefault();
+    document.body.classList.add('dragging');
+});
+
+document.addEventListener('dragover', (event) => {
+    event.preventDefault();
+});
+
+document.addEventListener('dragleave', (event) => {
+    if (event.target === document || event.target === document.body) {
+        document.body.classList.remove('dragging');
+    }
+});
+
+document.addEventListener('drop', (event) => {
+    event.preventDefault();
+    document.body.classList.remove('dragging'); 
+
+    const files = event.dataTransfer.files;
+
+    if (files.length > 0) {
+        const file = files[0];
+
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const photoDataUrl = e.target.result;
+
+                socket.emit('send_message', {
+                    room: room,
+                    sender: sender,
+                    recipient_id: recipientId,
+                    content: '', 
+                    photo: photoDataUrl,
+                });
+
+                setTimeout(scrollToBottom, 100);
+            };
+
+            reader.readAsDataURL(file);
+        } else {
+            alert('Please drop an image file!');
+        }
+    }
+});
+
 });

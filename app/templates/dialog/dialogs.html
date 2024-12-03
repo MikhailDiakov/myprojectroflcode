@@ -33,11 +33,16 @@ Dialogs
                     {% else %}
                         {{ '' }}
                     {% endif %}
-                    {{ last_messages[user.id].content }}
+                    {% if last_messages[user.id].content and last_messages[user.id].content != '' %}
+                        {{ last_messages[user.id].content }}
+                    {% else %}
+                        <em>Photo</em>
+                    {% endif %}
                 {% else %}
                     No messages yet.
                 {% endif %}
             </span>
+            
 
             <span class="message-time">
                 {% if last_messages[user.id] %}
@@ -83,50 +88,57 @@ Dialogs
             }
         });
 
-        socket.on('update_last_message', function (data) {
-            const dialogList = document.querySelector('.dialog-list');
-            let dialogItem = document.querySelector(`#dialog-user-${data.sender_id}`);
+    socket.on('update_last_message', function (data) {
+    const dialogList = document.querySelector('.dialog-list');
+    let dialogItem = document.querySelector(`#dialog-user-${data.sender_id}`);
 
-            if (!dialogItem) {
-                dialogItem = document.createElement('li');
-                dialogItem.className = 'dialog-item';
-                dialogItem.id = `dialog-user-${data.sender_id}`;
-                dialogItem.innerHTML = `
-                    <div class="dialog-row">
-                        <a href="/auth/profile/${data.sender_username}">
-                            <img src="/static/${data.avatar}" alt="Avatar" class="dialog-avatar">
-                        </a>
-                        <a href="/dialog/${data.sender_username}" class="dialog-link">${data.sender_username}</a>
-                        <span id="status-indicator-${data.sender_id}" class="status-indicator" 
-                            style="width: 10px; height: 10px; border-radius: 50%; margin-left: 0px;">
-                            ${data.is_online ? '<span style="background-color: green;"></span>' : '<span style="background-color: red;"></span>'}
-                        </span>
-                        <span class="dialog-last-message">${data.content}</span>
-                        <span class="message-time">${data.timestamp}</span>
-                        <span class="unread-count">${data.unread_count > 0 ? data.unread_count : ''}</span>
-                    </div>
-                `;
-                dialogList.prepend(dialogItem);
+    const lastMessageContent = data.content 
+        ? data.content 
+        : data.photo_url 
+        ? 'Photo' 
+        : 'No messages yet';
+
+    if (!dialogItem) {
+        dialogItem = document.createElement('li');
+        dialogItem.className = 'dialog-item';
+        dialogItem.id = `dialog-user-${data.sender_id}`;
+        dialogItem.innerHTML = `
+            <div class="dialog-row">
+                <a href="/auth/profile/${data.sender_username}">
+                    <img src="/static/${data.avatar}" alt="Avatar" class="dialog-avatar">
+                </a>
+                <a href="/dialog/${data.sender_username}" class="dialog-link">${data.sender_username}</a>
+                <span id="status-indicator-${data.sender_id}" class="status-indicator" 
+                      style="width: 10px; height: 10px; border-radius: 50%; margin-left: 0px;">
+                    ${data.is_online ? '<span style="background-color: green;"></span>' : '<span style="background-color: red;"></span>'}
+                </span>
+                <span class="dialog-last-message">${lastMessageContent}</span>
+                <span class="message-time">${data.timestamp}</span>
+                <span class="unread-count">${data.unread_count > 0 ? data.unread_count : ''}</span>
+            </div>
+        `;
+        dialogList.prepend(dialogItem);
+    } else {
+        const lastMessageElement = dialogItem.querySelector('.dialog-last-message');
+        lastMessageElement.textContent = lastMessageContent;
+
+        const timestampElement = dialogItem.querySelector('.message-time');
+        timestampElement.textContent = data.timestamp;
+
+        const unreadCountElement = dialogItem.querySelector('.unread-count');
+        if (unreadCountElement) {
+            unreadCountElement.textContent = data.unread_count > 0 ? data.unread_count : '';
+            if (data.unread_count > 0) {
+                dialogItem.classList.add('unread');
             } else {
-                const lastMessageElement = dialogItem.querySelector('.dialog-last-message');
-                lastMessageElement.textContent = `${data.content}`;
-
-                const timestampElement = dialogItem.querySelector('.message-time');
-                timestampElement.textContent = data.timestamp;
-
-                const unreadCountElement = dialogItem.querySelector('.unread-count');
-                if (unreadCountElement) {
-                    unreadCountElement.textContent = data.unread_count > 0 ? data.unread_count : '';
-                    if (data.unread_count > 0) {
-                        dialogItem.classList.add('unread');
-                    } else {
-                        dialogItem.classList.remove('unread');
-                    }
-                }
-
-                dialogList.prepend(dialogItem);
+                dialogItem.classList.remove('unread');
             }
-        });
+        }
+
+        dialogList.prepend(dialogItem);
+    }
+});
+
     });
 </script>
 {% endblock %}
