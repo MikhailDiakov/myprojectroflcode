@@ -80,11 +80,18 @@ socket.on('receive_message', function (data) {
 
     // Делаем меню реакций доступным по двойному клику
     messageElement.addEventListener('dblclick', function () {
-        toggleReactionMenu(data.id);
+        const reactionContainer = document.getElementById(`reaction-${data.id}`);
+        
+        // Если реакция уже существует, удаляем ее, иначе открываем меню
+        if (reactionContainer.textContent !== '') {
+            removeReaction(data.id);
+        } else {
+            toggleReactionMenu(data.id);
+        }
     });
 });
 
-// Делегирование событий для кнопок реакций и закрытия меню
+// Делегирование событий для кнопок реакции и закрытия меню
 document.getElementById('messages').addEventListener('click', function (event) {
     // Проверяем, кликнули ли по кнопке реакции
     if (event.target && event.target.classList.contains('reaction')) {
@@ -135,6 +142,23 @@ function sendReaction(messageId, reactionType) {
     reactionContainer.textContent = getReactionSymbol(reactionType);
 }
 
+// Функция для удаления реакции
+function removeReaction(messageId) {
+    const room = document.getElementById('messages').dataset.room;
+    const sender = document.getElementById('messages').dataset.sender;
+    const recipientId = document.getElementById('messages').dataset.recipient;
+
+    socket.emit('remove_reaction', {
+        room: room,
+        sender: sender,
+        recipient_id: recipientId,
+        message_id: messageId,
+    });
+
+    const reactionContainer = document.getElementById(`reaction-${messageId}`);
+    reactionContainer.textContent = ''; // Удаляем реакцию
+}
+
 // Функция для получения смайлика реакции
 function getReactionSymbol(reactionType) {
     switch (reactionType) {
@@ -146,6 +170,7 @@ function getReactionSymbol(reactionType) {
         default: return '';
     }
 }
+
 
     socket.on('update_message_status', function (data) {
         const userId = document.getElementById('messages').dataset.sender;
@@ -365,7 +390,8 @@ document.addEventListener('drop', (event) => {
 function toggleReactionMenu(messageId) {
     const reactionMenu = document.getElementById(`reactions-${messageId}`);
     const allReactionMenus = document.querySelectorAll('.reactions');
-    
+    const messagesContainer = document.getElementById('messages');
+
     // Закрыть все другие меню реакций
     allReactionMenus.forEach(function(menu) {
         if (menu !== reactionMenu) {
@@ -376,6 +402,20 @@ function toggleReactionMenu(messageId) {
     // Переключить видимость текущего меню
     if (reactionMenu.style.display === 'none' || reactionMenu.style.display === '') {
         reactionMenu.style.display = 'block';
+        
+        // Проверяем, не выходит ли меню за пределы контейнера сообщений
+        const rect = reactionMenu.getBoundingClientRect();
+        const containerRect = messagesContainer.getBoundingClientRect();
+
+        // Если меню выходит за пределы контейнера снизу
+        if (rect.bottom > containerRect.bottom) {
+            messagesContainer.scrollTop += rect.bottom - containerRect.bottom; // Прокручиваем вниз
+        }
+
+        // Если меню выходит за пределы контейнера сверху
+        if (rect.top < containerRect.top) {
+            messagesContainer.scrollTop -= containerRect.top - rect.top; // Прокручиваем вверх
+        }
     } else {
         reactionMenu.style.display = 'none';
     }
