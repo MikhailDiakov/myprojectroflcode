@@ -58,10 +58,20 @@ def dialogs():
     return render_template('dialog/dialogs.html', users=sorted_users, last_messages=last_messages)
 
 
+def get_reaction_symbol(reaction_type):
+    reaction_dict = {
+    'like': '👍',
+    'dislike': '👎',
+    'heart': '❤️',
+    'smile': '😊',  
+    'sad': '😢',
+    }
+    return reaction_dict.get(reaction_type, '')
+
 @dialog_bp.route('/<username>')
 def dialog(username):
     if not is_logged_in():
-        return redirect(url_for('auth.login'))  
+        return redirect(url_for('auth.login')) 
 
     sender_id = session['user_id']
     recipient = User.query.filter_by(username=username).first_or_404() 
@@ -69,11 +79,12 @@ def dialog(username):
     room = f"chat_{min(sender_id, recipient.id)}_{max(sender_id, recipient.id)}"
 
     messages = Message.query.filter(
-        ((Message.sender_id == sender_id) & (Message.recipient_id == recipient.id)) |
-        ((Message.sender_id == recipient.id) & (Message.recipient_id == sender_id))
+    ((Message.sender_id == sender_id) & (Message.recipient_id == recipient.id)) |
+    ((Message.sender_id == recipient.id) & (Message.recipient_id == sender_id))
     ).order_by(Message.timestamp).all()
+    reactions = Reaction.query.filter(Reaction.message_id.in_([msg.id for msg in messages])).all()
 
-    return render_template('dialog/dialog.html', recipient=recipient, messages=messages, room=room)
+    return render_template('dialog/dialog.html', recipient=recipient, messages=messages, room=room, reactions=reactions, get_reaction_symbol=get_reaction_symbol)
 
 @socketio.on('join_room')
 def handle_join_room(data):

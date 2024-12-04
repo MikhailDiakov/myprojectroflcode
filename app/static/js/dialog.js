@@ -221,7 +221,6 @@ function getReactionSymbol(reactionType) {
     let typingTimeout; 
 
     socket.on('user_typing', function (data) {
-        console.log(data.sender_id, sender); 
     
         const typingIndicatorContainer = document.getElementById('typing-indicator-container');
         const existingTypingIndicator = document.getElementById('typing-indicator');
@@ -391,6 +390,14 @@ function toggleReactionMenu(messageId) {
     const reactionMenu = document.getElementById(`reactions-${messageId}`);
     const allReactionMenus = document.querySelectorAll('.reactions');
     const messagesContainer = document.getElementById('messages');
+    const messageElement = document.querySelector(`.message-item[data-id="${messageId}"]`);
+
+    const currentUserId = document.getElementById('messages').dataset.sender;
+    const authorId = messageElement.getAttribute('data-author-id'); // Исправлена ошибка
+
+    if (authorId === currentUserId) {
+        return; // Прерываем выполнение
+    }
 
     // Закрыть все другие меню реакций
     allReactionMenus.forEach(function(menu) {
@@ -468,17 +475,6 @@ function getReactionSymbol(reactionType) {
     }
 }
 
-// Обработчик событий для кнопок реакции
-document.querySelectorAll('.reaction').forEach(function (button) {
-    button.addEventListener('click', function () {
-        const messageId = this.getAttribute('data-message-id');
-        const reactionType = this.getAttribute('data-reaction');
-        
-        sendReaction(messageId, reactionType);
-
-        document.getElementById(`reactions-${messageId}`).style.display = 'none';
-    });
-});
 
 // Обработчик для двойного клика на сообщение
 document.querySelectorAll('.message-item').forEach(function (messageElement) {
@@ -517,6 +513,7 @@ socket.on('receive_reaction', function (data) {
 
 // Слушатель для удаления реакции с сервера
 socket.on('remove_reaction', function (data) {
+
     const messageElement = document.querySelector(`.message-item[data-id="${data.message_id}"]`);
     
     if (messageElement) {

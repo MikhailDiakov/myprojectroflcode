@@ -10,7 +10,7 @@ Chat with {{ recipient.username }}
 <div id="messages" class="message-container" data-room="{{ room }}" data-sender="{{ session['user_id'] }}"
     data-recipient="{{ recipient.id }}">
     {% for message in messages %}
-    <div class="message-item" data-id="{{ message.id }}">
+    <div class="message-item" data-id="{{ message.id }}" data-author-id="{{ message.sender_id }}">
         <strong class="message-sender">
             {{ 'You' if message.sender_id == session['user_id'] else message.sender.username }}:
         </strong>
@@ -29,10 +29,14 @@ Chat with {{ recipient.username }}
         {% endif %}
         </span>
         <span class="message-reaction" id="reaction-{{ message.id }}">
-            <!-- Реакция будет отображаться здесь -->
+            {% for reaction in reactions %}
+            {% if reaction.message_id == message.id %}
+            <span>{{ get_reaction_symbol(reaction.reaction_type) }}</span>
+            {% endif %}
+            {% endfor %}
         </span>
+            
     
-        <!-- Меню реакций (скрыто по умолчанию) -->
         <div class="reactions" id="reactions-{{ message.id }}" style="display: none;">
             <button class="reaction" data-message-id="{{ message.id }}" data-reaction="like">
                 👍
@@ -49,7 +53,7 @@ Chat with {{ recipient.username }}
             <button class="reaction" data-message-id="{{ message.id }}" data-reaction="sad">
                 😢
             </button>
-            <button class="close-reactions" data-message-id="{{ message.id }}">❌</button> <!-- Кнопка закрытия -->
+            <button class="close-reactions" data-message-id="{{ message.id }}">❌</button> 
         </div>
         
         <span class="message-time" style="right: 0; bottom: 0; position: absolute;">
