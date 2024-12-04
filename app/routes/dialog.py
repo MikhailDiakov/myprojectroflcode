@@ -216,20 +216,17 @@ def handle_typing(data):
             'sender_username': sender_username
         }, room=room)
 
-# Пример на сервере
 @socketio.on('send_reaction')
 def handle_reaction(data):
-    # Сохранение реакции в базе данных
     reaction = Reaction.query.filter_by(
         message_id=data['message_id'],
         user_id=data['sender']
     ).first()
 
     if reaction:
-        # Обновляем существующую реакцию
         reaction.reaction_type = data['reaction_type']
     else:
-        # Если реакции нет, добавляем новую
+
         reaction = Reaction(
             message_id=data['message_id'],
             reaction_type=data['reaction_type'],
@@ -239,7 +236,6 @@ def handle_reaction(data):
 
     db.session.commit()
 
-    # Отправляем информацию о реакции обратно всем клиентам
     socketio.emit('receive_reaction', {
         'message_id': data['message_id'],
         'reaction_type': data['reaction_type']
@@ -247,7 +243,6 @@ def handle_reaction(data):
 
 @socketio.on('remove_reaction')
 def handle_remove_reaction(data):
-    # Удаление реакции из базы данных
     reaction = Reaction.query.filter_by(
         message_id=data['message_id'],
         user_id=data['sender']
@@ -257,7 +252,6 @@ def handle_remove_reaction(data):
         db.session.delete(reaction)
         db.session.commit()
 
-    # Отправляем событие об удалении реакции
     socketio.emit('remove_reaction', {
         'message_id': data['message_id']
     }, room=data['room'])

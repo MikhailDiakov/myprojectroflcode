@@ -23,13 +23,17 @@ document.addEventListener('DOMContentLoaded', function () {
         socket.emit('join_room', { room: room, recipient_id: recipientId });
     });
 
-// Обработчик события для получения сообщения
 socket.on('receive_message', function (data) {
     const messageElement = document.createElement('div');
     messageElement.classList.add('message-item');
-    messageElement.setAttribute('data-id', data.id); // Устанавливаем id сообщения для обработки реакций
+    messageElement.setAttribute('data-id', data.id); 
 
-    // Оформляем сообщение в зависимости от того, отправил ли его текущий пользователь
+    messageElement.addEventListener('mousedown', function (event) {
+        if (event.detail === 2) {
+            event.preventDefault();
+        }
+    });
+
     if (String(data.sender) === String(sender)) {
         messageElement.classList.add('sent');
         messageElement.innerHTML = `
@@ -74,15 +78,13 @@ socket.on('receive_message', function (data) {
         });
     }
 
-    // Добавляем новое сообщение в контейнер
+
     messagesContainer.appendChild(messageElement);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-    // Делаем меню реакций доступным по двойному клику
     messageElement.addEventListener('dblclick', function () {
         const reactionContainer = document.getElementById(`reaction-${data.id}`);
         
-        // Если реакция уже существует, удаляем ее, иначе открываем меню
         if (reactionContainer.textContent !== '') {
             removeReaction(data.id);
         } else {
@@ -91,36 +93,30 @@ socket.on('receive_message', function (data) {
     });
 });
 
-// Делегирование событий для кнопок реакции и закрытия меню
 document.getElementById('messages').addEventListener('click', function (event) {
-    // Проверяем, кликнули ли по кнопке реакции
     if (event.target && event.target.classList.contains('reaction')) {
         const messageId = event.target.getAttribute('data-message-id');
         const reactionType = event.target.getAttribute('data-reaction');
         sendReaction(messageId, reactionType);
-        document.getElementById(`reactions-${messageId}`).style.display = 'none'; // Скрыть меню после выбора реакции
+        document.getElementById(`reactions-${messageId}`).style.display = 'none';
     }
 
-    // Проверяем, кликнули ли по кнопке закрытия меню реакций
     if (event.target && event.target.classList.contains('close-reactions')) {
         const messageId = event.target.getAttribute('data-message-id');
-        document.getElementById(`reactions-${messageId}`).style.display = 'none'; // Закрыть меню
+        document.getElementById(`reactions-${messageId}`).style.display = 'none'; 
     }
 });
 
-// Функция для отображения или скрытия меню реакций
 function toggleReactionMenu(messageId) {
     const reactionMenu = document.getElementById(`reactions-${messageId}`);
     const allReactionMenus = document.querySelectorAll('.reactions');
 
-    // Закрыть все другие меню реакций
     allReactionMenus.forEach(function(menu) {
         if (menu !== reactionMenu) {
             menu.style.display = 'none';
         }
     });
 
-    // Переключить видимость текущего меню
     if (reactionMenu.style.display === 'none' || reactionMenu.style.display === '') {
         reactionMenu.style.display = 'block';
     } else {
@@ -128,7 +124,6 @@ function toggleReactionMenu(messageId) {
     }
 }
 
-// Функция для отправки реакции
 function sendReaction(messageId, reactionType) {
     socket.emit('send_reaction', {
         room: room,
@@ -142,7 +137,6 @@ function sendReaction(messageId, reactionType) {
     reactionContainer.textContent = getReactionSymbol(reactionType);
 }
 
-// Функция для удаления реакции
 function removeReaction(messageId) {
     const room = document.getElementById('messages').dataset.room;
     const sender = document.getElementById('messages').dataset.sender;
@@ -156,10 +150,9 @@ function removeReaction(messageId) {
     });
 
     const reactionContainer = document.getElementById(`reaction-${messageId}`);
-    reactionContainer.textContent = ''; // Удаляем реакцию
+    reactionContainer.textContent = ''; 
 }
 
-// Функция для получения смайлика реакции
 function getReactionSymbol(reactionType) {
     switch (reactionType) {
         case 'like': return '👍';
@@ -385,7 +378,6 @@ document.addEventListener('drop', (event) => {
         }
     }
 });
-// Функция для отображения или скрытия меню реакций
 function toggleReactionMenu(messageId) {
     const reactionMenu = document.getElementById(`reactions-${messageId}`);
     const allReactionMenus = document.querySelectorAll('.reactions');
@@ -393,42 +385,36 @@ function toggleReactionMenu(messageId) {
     const messageElement = document.querySelector(`.message-item[data-id="${messageId}"]`);
 
     const currentUserId = document.getElementById('messages').dataset.sender;
-    const authorId = messageElement.getAttribute('data-author-id'); // Исправлена ошибка
+    const authorId = messageElement.getAttribute('data-author-id'); 
 
     if (authorId === currentUserId) {
-        return; // Прерываем выполнение
+        return; 
     }
 
-    // Закрыть все другие меню реакций
     allReactionMenus.forEach(function(menu) {
         if (menu !== reactionMenu) {
             menu.style.display = 'none';
         }
     });
 
-    // Переключить видимость текущего меню
     if (reactionMenu.style.display === 'none' || reactionMenu.style.display === '') {
         reactionMenu.style.display = 'block';
         
-        // Проверяем, не выходит ли меню за пределы контейнера сообщений
         const rect = reactionMenu.getBoundingClientRect();
         const containerRect = messagesContainer.getBoundingClientRect();
 
-        // Если меню выходит за пределы контейнера снизу
         if (rect.bottom > containerRect.bottom) {
-            messagesContainer.scrollTop += rect.bottom - containerRect.bottom; // Прокручиваем вниз
+            messagesContainer.scrollTop += rect.bottom - containerRect.bottom; 
         }
 
-        // Если меню выходит за пределы контейнера сверху
         if (rect.top < containerRect.top) {
-            messagesContainer.scrollTop -= containerRect.top - rect.top; // Прокручиваем вверх
+            messagesContainer.scrollTop -= containerRect.top - rect.top; 
         }
     } else {
         reactionMenu.style.display = 'none';
     }
 }
 
-// Функция для отправки реакции через сокет
 function sendReaction(messageId, reactionType) {
     const room = document.getElementById('messages').dataset.room;
     const sender = document.getElementById('messages').dataset.sender;
@@ -446,7 +432,6 @@ function sendReaction(messageId, reactionType) {
     reactionContainer.textContent = getReactionSymbol(reactionType);
 }
 
-// Функция для удаления реакции
 function removeReaction(messageId) {
     const room = document.getElementById('messages').dataset.room;
     const sender = document.getElementById('messages').dataset.sender;
@@ -460,10 +445,9 @@ function removeReaction(messageId) {
     });
 
     const reactionContainer = document.getElementById(`reaction-${messageId}`);
-    reactionContainer.textContent = ''; // Удаляем реакцию
+    reactionContainer.textContent = ''; 
 }
 
-// Функция для получения смайлика в зависимости от типа реакции
 function getReactionSymbol(reactionType) {
     switch (reactionType) {
         case 'like': return '👍';
@@ -476,32 +460,33 @@ function getReactionSymbol(reactionType) {
 }
 
 
-// Обработчик для двойного клика на сообщение
 document.querySelectorAll('.message-item').forEach(function (messageElement) {
+    messageElement.addEventListener('mousedown', function (event) {
+        if (event.detail === 2) {
+            event.preventDefault();
+        }
+    });
+
     messageElement.addEventListener('dblclick', function () {
         const messageId = messageElement.getAttribute('data-id');
-        const reactionMenu = document.getElementById(`reactions-${messageId}`);
-
-        if (reactionMenu.style.display === 'none' || reactionMenu.style.display === '') {
-            toggleReactionMenu(messageId);
+        const reactionContainer = document.getElementById(`reaction-${messageId}`);
+        
+        if (reactionContainer && reactionContainer.textContent.trim() !== '') {
+            removeReaction(messageId);
         } else {
-            const reactionContainer = document.getElementById(`reaction-${messageId}`);
-            if (reactionContainer.textContent !== '') {
-                removeReaction(messageId);
-            } else {
-                toggleReactionMenu(messageId);
-            }
+            toggleReactionMenu(messageId);
         }
     });
 });
+
+
 document.querySelectorAll('.close-reactions').forEach(function (button) {
     button.addEventListener('click', function () {
         const messageId = button.getAttribute('data-message-id');
         const reactionsMenu = document.getElementById(`reactions-${messageId}`);
-        reactionsMenu.style.display = 'none'; // Закрываем меню реакции
+        reactionsMenu.style.display = 'none'; 
     });
 });
-// Слушатель для получения реакции с сервера
 socket.on('receive_reaction', function (data) {
     const messageElement = document.querySelector(`.message-item[data-id="${data.message_id}"]`);
     
@@ -511,7 +496,6 @@ socket.on('receive_reaction', function (data) {
     }
 });
 
-// Слушатель для удаления реакции с сервера
 socket.on('remove_reaction', function (data) {
 
     const messageElement = document.querySelector(`.message-item[data-id="${data.message_id}"]`);
