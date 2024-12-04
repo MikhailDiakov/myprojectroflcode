@@ -27,8 +27,30 @@ Chat with {{ recipient.username }}
                      alt="Message photo" class="photo" />
             </div>
         {% endif %}
-        
         </span>
+        <span class="message-reaction" id="reaction-{{ message.id }}">
+            <!-- Реакция будет отображаться здесь -->
+        </span>
+    
+        <!-- Меню реакций (скрыто по умолчанию) -->
+        <div class="reactions" id="reactions-{{ message.id }}" style="display: none;">
+            <button class="reaction" data-message-id="{{ message.id }}" data-reaction="like">
+                👍
+            </button>
+            <button class="reaction" data-message-id="{{ message.id }}" data-reaction="dislike">
+                👎
+            </button>
+            <button class="reaction" data-message-id="{{ message.id }}" data-reaction="heart">
+                ❤️
+            </button>
+            <button class="reaction" data-message-id="{{ message.id }}" data-reaction="smile">
+                😊
+            </button>
+            <button class="reaction" data-message-id="{{ message.id }}" data-reaction="sad">
+                😢
+            </button>
+            <button class="close-reactions" data-message-id="{{ message.id }}">❌</button> <!-- Кнопка закрытия -->
+        </div>
         
         <span class="message-time" style="right: 0; bottom: 0; position: absolute;">
             {{ message.timestamp.strftime('%H:%M %d/%m') }}

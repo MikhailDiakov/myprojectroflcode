@@ -23,37 +23,129 @@ document.addEventListener('DOMContentLoaded', function () {
         socket.emit('join_room', { room: room, recipient_id: recipientId });
     });
 
-    socket.on('receive_message', function (data) {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message-item');
+// Обработчик события для получения сообщения
+socket.on('receive_message', function (data) {
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('message-item');
+    messageElement.setAttribute('data-id', data.id); // Устанавливаем id сообщения для обработки реакций
+
+    // Оформляем сообщение в зависимости от того, отправил ли его текущий пользователь
+    if (String(data.sender) === String(sender)) {
+        messageElement.classList.add('sent');
+        messageElement.innerHTML = `
+            <strong>You:</strong> ${data.content} 
+            ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
+            <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
+            <span class="read-status">${data.read ? 'Read' : ''}</span>
+            <span class="message-reaction" id="reaction-${data.id}">
+                <!-- Реакция будет отображаться здесь -->
+            </span>
+            <div class="reactions" id="reactions-${data.id}" style="display: none;">
+                <button class="reaction" data-message-id="${data.id}" data-reaction="like">👍</button>
+                <button class="reaction" data-message-id="${data.id}" data-reaction="dislike">👎</button>
+                <button class="reaction" data-message-id="${data.id}" data-reaction="heart">❤️</button>
+                <button class="reaction" data-message-id="${data.id}" data-reaction="smile">😊</button>
+                <button class="reaction" data-message-id="${data.id}" data-reaction="sad">😢</button>
+                <button class="close-reactions" data-message-id="${data.id}">❌</button>
+            </div>
+        `;
+    } else {
+        messageElement.classList.add('received');
+        messageElement.innerHTML = `
+            <strong>${data.sender_username}:</strong> ${data.content}
+            ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
+            <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
+            <span class="message-reaction" id="reaction-${data.id}">
+                <!-- Реакция будет отображаться здесь -->
+            </span>
+            <div class="reactions" id="reactions-${data.id}" style="display: none;">
+                <button class="reaction" data-message-id="${data.id}" data-reaction="like">👍</button>
+                <button class="reaction" data-message-id="${data.id}" data-reaction="dislike">👎</button>
+                <button class="reaction" data-message-id="${data.id}" data-reaction="heart">❤️</button>
+                <button class="reaction" data-message-id="${data.id}" data-reaction="smile">😊</button>
+                <button class="reaction" data-message-id="${data.id}" data-reaction="sad">😢</button>
+                <button class="close-reactions" data-message-id="${data.id}">❌</button>
+            </div>
+        `;
         
-        if (String(data.sender) === String(sender)) {
-            messageElement.classList.add('sent');
-            messageElement.innerHTML = `
-                <strong>You:</strong> ${data.content} 
-                 ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
-                <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
-                <span class="read-status">${data.read ? 'Read' : ''}</span>
-            `;
-        } else {
-            messageElement.classList.add('received');
-            messageElement.innerHTML = `
-                <strong>${data.sender_username}:</strong> ${data.content}
-                 ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
-                <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
-            `;
-    
-            socket.emit('mark_as_read', {
-                message_id: data.id,
-                sender_id: data.sender,
-            });
-        }
-    
-        messagesContainer.appendChild(messageElement);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        socket.emit('mark_as_read', {
+            message_id: data.id,
+            sender_id: data.sender,
+        });
+    }
+
+    // Добавляем новое сообщение в контейнер
+    messagesContainer.appendChild(messageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    // Делаем меню реакций доступным по двойному клику
+    messageElement.addEventListener('dblclick', function () {
+        toggleReactionMenu(data.id);
     });
-    
-    
+});
+
+// Делегирование событий для кнопок реакций и закрытия меню
+document.getElementById('messages').addEventListener('click', function (event) {
+    // Проверяем, кликнули ли по кнопке реакции
+    if (event.target && event.target.classList.contains('reaction')) {
+        const messageId = event.target.getAttribute('data-message-id');
+        const reactionType = event.target.getAttribute('data-reaction');
+        sendReaction(messageId, reactionType);
+        document.getElementById(`reactions-${messageId}`).style.display = 'none'; // Скрыть меню после выбора реакции
+    }
+
+    // Проверяем, кликнули ли по кнопке закрытия меню реакций
+    if (event.target && event.target.classList.contains('close-reactions')) {
+        const messageId = event.target.getAttribute('data-message-id');
+        document.getElementById(`reactions-${messageId}`).style.display = 'none'; // Закрыть меню
+    }
+});
+
+// Функция для отображения или скрытия меню реакций
+function toggleReactionMenu(messageId) {
+    const reactionMenu = document.getElementById(`reactions-${messageId}`);
+    const allReactionMenus = document.querySelectorAll('.reactions');
+
+    // Закрыть все другие меню реакций
+    allReactionMenus.forEach(function(menu) {
+        if (menu !== reactionMenu) {
+            menu.style.display = 'none';
+        }
+    });
+
+    // Переключить видимость текущего меню
+    if (reactionMenu.style.display === 'none' || reactionMenu.style.display === '') {
+        reactionMenu.style.display = 'block';
+    } else {
+        reactionMenu.style.display = 'none';
+    }
+}
+
+// Функция для отправки реакции
+function sendReaction(messageId, reactionType) {
+    socket.emit('send_reaction', {
+        room: room,
+        sender: sender,
+        recipient_id: recipientId,
+        message_id: messageId,
+        reaction_type: reactionType,
+    });
+
+    const reactionContainer = document.getElementById(`reaction-${messageId}`);
+    reactionContainer.textContent = getReactionSymbol(reactionType);
+}
+
+// Функция для получения смайлика реакции
+function getReactionSymbol(reactionType) {
+    switch (reactionType) {
+        case 'like': return '👍';
+        case 'dislike': return '👎';
+        case 'heart': return '❤️';
+        case 'smile': return '😊';
+        case 'sad': return '😢';
+        default: return '';
+    }
+}
 
     socket.on('update_message_status', function (data) {
         const userId = document.getElementById('messages').dataset.sender;
@@ -269,5 +361,127 @@ document.addEventListener('drop', (event) => {
         }
     }
 });
+// Функция для отображения или скрытия меню реакций
+function toggleReactionMenu(messageId) {
+    const reactionMenu = document.getElementById(`reactions-${messageId}`);
+    const allReactionMenus = document.querySelectorAll('.reactions');
+    
+    // Закрыть все другие меню реакций
+    allReactionMenus.forEach(function(menu) {
+        if (menu !== reactionMenu) {
+            menu.style.display = 'none';
+        }
+    });
 
+    // Переключить видимость текущего меню
+    if (reactionMenu.style.display === 'none' || reactionMenu.style.display === '') {
+        reactionMenu.style.display = 'block';
+    } else {
+        reactionMenu.style.display = 'none';
+    }
+}
+
+// Функция для отправки реакции через сокет
+function sendReaction(messageId, reactionType) {
+    const room = document.getElementById('messages').dataset.room;
+    const sender = document.getElementById('messages').dataset.sender;
+    const recipientId = document.getElementById('messages').dataset.recipient;
+
+    socket.emit('send_reaction', {
+        room: room,
+        sender: sender,
+        recipient_id: recipientId,
+        message_id: messageId,
+        reaction_type: reactionType,
+    });
+
+    const reactionContainer = document.getElementById(`reaction-${messageId}`);
+    reactionContainer.textContent = getReactionSymbol(reactionType);
+}
+
+// Функция для удаления реакции
+function removeReaction(messageId) {
+    const room = document.getElementById('messages').dataset.room;
+    const sender = document.getElementById('messages').dataset.sender;
+    const recipientId = document.getElementById('messages').dataset.recipient;
+
+    socket.emit('remove_reaction', {
+        room: room,
+        sender: sender,
+        recipient_id: recipientId,
+        message_id: messageId,
+    });
+
+    const reactionContainer = document.getElementById(`reaction-${messageId}`);
+    reactionContainer.textContent = ''; // Удаляем реакцию
+}
+
+// Функция для получения смайлика в зависимости от типа реакции
+function getReactionSymbol(reactionType) {
+    switch (reactionType) {
+        case 'like': return '👍';
+        case 'dislike': return '👎';
+        case 'heart': return '❤️';
+        case 'smile': return '😊';
+        case 'sad': return '😢';
+        default: return '';
+    }
+}
+
+// Обработчик событий для кнопок реакции
+document.querySelectorAll('.reaction').forEach(function (button) {
+    button.addEventListener('click', function () {
+        const messageId = this.getAttribute('data-message-id');
+        const reactionType = this.getAttribute('data-reaction');
+        
+        sendReaction(messageId, reactionType);
+
+        document.getElementById(`reactions-${messageId}`).style.display = 'none';
+    });
+});
+
+// Обработчик для двойного клика на сообщение
+document.querySelectorAll('.message-item').forEach(function (messageElement) {
+    messageElement.addEventListener('dblclick', function () {
+        const messageId = messageElement.getAttribute('data-id');
+        const reactionMenu = document.getElementById(`reactions-${messageId}`);
+
+        if (reactionMenu.style.display === 'none' || reactionMenu.style.display === '') {
+            toggleReactionMenu(messageId);
+        } else {
+            const reactionContainer = document.getElementById(`reaction-${messageId}`);
+            if (reactionContainer.textContent !== '') {
+                removeReaction(messageId);
+            } else {
+                toggleReactionMenu(messageId);
+            }
+        }
+    });
+});
+document.querySelectorAll('.close-reactions').forEach(function (button) {
+    button.addEventListener('click', function () {
+        const messageId = button.getAttribute('data-message-id');
+        const reactionsMenu = document.getElementById(`reactions-${messageId}`);
+        reactionsMenu.style.display = 'none'; // Закрываем меню реакции
+    });
+});
+// Слушатель для получения реакции с сервера
+socket.on('receive_reaction', function (data) {
+    const messageElement = document.querySelector(`.message-item[data-id="${data.message_id}"]`);
+    
+    if (messageElement) {
+        const reactionContainer = messageElement.querySelector('.message-reaction');
+        reactionContainer.textContent = getReactionSymbol(data.reaction_type);
+    }
+});
+
+// Слушатель для удаления реакции с сервера
+socket.on('remove_reaction', function (data) {
+    const messageElement = document.querySelector(`.message-item[data-id="${data.message_id}"]`);
+    
+    if (messageElement) {
+        const reactionContainer = messageElement.querySelector('.message-reaction');
+        reactionContainer.textContent = '';
+    }
+});
 });

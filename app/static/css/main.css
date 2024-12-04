@@ -935,3 +935,65 @@ body.light .photo-menu{
 #photo-upload {
     display: none; 
 }
+body.dark .reactions{
+    background-color: #333;
+}
+
+body.light.reactions{
+    background-color: #fff;
+}
+/* Основной стиль для списка реакций */
+.reactions {
+    display: flex;
+    gap: 5px; /* Уменьшаем промежуток между кнопками */
+    padding: 5px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    max-width: 275px; /* Ограничиваем максимальную ширину меню */
+    font-size: 16px; /* Уменьшаем размер текста */
+    justify-content: center; /* Центрируем кнопки внутри меню */
+}
+
+/* Стиль для кнопок реакций */
+.reaction {
+    background: none;
+    border: none;
+    font-size: 18px; /* Уменьшаем размер смайликов */
+    cursor: pointer;
+    padding: 5px 10px; /* Уменьшаем внутренние отступы */
+    border-radius: 5px;
+    transition: background-color 0.2s ease;
+}
+
+.reaction:hover {
+    background-color: #dcdcdc;
+}
+
+/* Стиль для контейнера реакции, которая отображается рядом с сообщением */
+.message-reaction {
+    font-size: 18px;
+    color: #333;
+    cursor: pointer;
+    margin-left: 10px; /* Немного увеличиваем отступ от текста */
+}
+
+/* Тень и плавный переход для реакции */
+.message-reaction:hover {
+    opacity: 0.7;
+}
+
+.close-reactions {
+    background-color: transparent; /* Прозрачный фон */
+    border: none; /* Убираем рамку */
+    color: red; /* Красный цвет текста */
+    font-size: 20px; /* Размер шрифта */
+    cursor: pointer; /* Указатель мыши при наведении */
+    transition: color 0.3s; /* Плавный переход для изменения цвета */
+}
+
+.close-reactions:hover {
+    color: darkred; /* Темно-красный цвет при наведении */
+}
+.message-item {
+    user-select: none; /* Отключаем выделение текста */
+}
