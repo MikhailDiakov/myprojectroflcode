@@ -89,6 +89,7 @@ Dialogs
         });
 
     socket.on('update_last_message', function (data) {
+    console.log(data)
     const dialogList = document.querySelector('.dialog-list');
     let dialogItem = document.querySelector(`#dialog-user-${data.sender_id}`);
 

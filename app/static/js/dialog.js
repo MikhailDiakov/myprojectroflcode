@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 sender_id: data.sender,
             });
         }
+        
     
         messagesContainer.appendChild(messageElement);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -83,9 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     toggleReactionMenu(data.id);
                 }
-            } else {
-                console.warn('Нельзя удалять или добавлять реакции на свои сообщения');
-            }
+            } 
         });
     });
     
@@ -441,10 +440,24 @@ document.querySelectorAll('.close-reactions').forEach(function (button) {
 });
 socket.on('receive_reaction', function (data) {
     const messageElement = document.querySelector(`.message-item[data-id="${data.message_id}"]`);
-    
     if (messageElement) {
         const reactionContainer = messageElement.querySelector('.message-reaction');
+        const sender = document.getElementById('messages').dataset.sender;
         reactionContainer.textContent = getReactionSymbol(data.reaction_type);
+
+        const authorElement = messageElement.querySelector('.reaction-author');
+        if (authorElement) {
+            authorElement.textContent = `Reacted by: ${data.reaction_author}`;
+        }
+
+        const reactionAuthorId = messageElement.getAttribute('data-author-id');
+        
+        if (String(sender) !== String(data.sender)) {
+            socket.emit('mark_as_read', {
+                sender_id: data.sender,
+                reaction_author: reactionAuthorId
+            });
+        }
     }
 });
 

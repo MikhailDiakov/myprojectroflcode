@@ -79,9 +79,11 @@ def dialog(username):
     room = f"chat_{min(sender_id, recipient.id)}_{max(sender_id, recipient.id)}"
 
     messages = Message.query.filter(
-    ((Message.sender_id == sender_id) & (Message.recipient_id == recipient.id)) |
-    ((Message.sender_id == recipient.id) & (Message.recipient_id == sender_id))
+        ((Message.sender_id == sender_id) & (Message.recipient_id == recipient.id)) |
+        ((Message.sender_id == recipient.id) & (Message.recipient_id == sender_id)),
+        Message.reactions == False
     ).order_by(Message.timestamp).all()
+
     reactions = Reaction.query.filter(Reaction.message_id.in_([msg.id for msg in messages])).all()
 
     return render_template('dialog/dialog.html', recipient=recipient, messages=messages, room=room, reactions=reactions, get_reaction_symbol=get_reaction_symbol)
@@ -96,15 +98,26 @@ def handle_join_room(data):
         active_users[user_id].add(request.sid)
         join_room(room)
 
-        recipient_id = data.get('recipient_id')
         if recipient_id:
             Message.query.filter_by(sender_id=recipient_id, recipient_id=user_id, read=False) \
                 .update({'read': True})
+
+            reactions_to_delete = Message.query.filter_by(
+                sender_id=recipient_id,
+                recipient_id=user_id,
+                reactions=True
+            ).all()
+
+            for reaction in reactions_to_delete:
+                db.session.delete(reaction)
+
             db.session.commit()
 
-            emit('update_message_status', {'status': 'read', 'sender_id': user_id}, room=room)
-    else:
-        print("Room not provided or user not authenticated")
+            emit('update_message_status', {
+                'status': 'read',
+                'sender_id': user_id
+            }, room=room)
+
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -191,19 +204,39 @@ def handle_send_message(data):
 def handle_mark_as_read(data):
     user_id = session.get('user_id')
     message_id = data.get('message_id')
-    sender_id = data.get('sender_id') 
+    sender_id = data.get('sender_id')
+    reaction_author = data.get('reaction_author')
+
     if user_id and message_id and sender_id:
         message = Message.query.filter_by(id=message_id, recipient_id=user_id, sender_id=sender_id, read=False).first()
+        
+        
         if message:
             message.read = True
             db.session.commit()
-
+            
+            
             emit('update_message_status', {
                 'message_id': message.id, 
                 'status': 'read',
                 'recipient_id': '',
                 'sender_id': '',
             }, room=f"chat_{min(sender_id, user_id)}_{max(sender_id, user_id)}")
+
+    else:
+        message_reactions = Message.query.filter_by(
+            recipient_id=reaction_author, 
+            sender_id=sender_id, 
+            read=False, 
+            reactions=True
+        ).all()
+
+        if message_reactions:
+            for reaction in message_reactions:
+                db.session.delete(reaction)
+            db.session.commit()
+
+
 
 @socketio.on('typing')
 def handle_typing(data):
@@ -237,9 +270,46 @@ def handle_reaction(data):
     db.session.commit()
 
     socketio.emit('receive_reaction', {
+        'sender': session.get('user_id'),
         'message_id': data['message_id'],
         'reaction_type': data['reaction_type']
     }, room=data['room'])
+
+    sender_id = session.get('user_id')
+    recipient_id = data.get('recipient_id')
+
+    if sender_id and recipient_id:
+        message = Message(
+            sender_id=sender_id,
+            recipient_id=recipient_id,
+            content='Reactions',
+            reactions = True,
+            timestamp=datetime.utcnow(),
+            read=False
+        )
+        db.session.add(message)
+        db.session.commit()
+
+        sender_username = User.query.get(sender_id).username
+        avatar_url = User.query.get(sender_id).avatar_url
+
+    unread_count = Message.query.filter_by(
+            recipient_id=recipient_id,
+            sender_id=sender_id,
+            read=False
+        ).count()
+
+
+    emit('update_last_message', {
+            'sender_id': sender_id,
+            'sender_username': sender_username,
+            'avatar': avatar_url,
+            'recipient_id': recipient_id,
+            'content': 'Reactions',
+            'reactions': True,
+            'timestamp': message.timestamp.strftime('%H:%M %d/%m'),
+            'unread_count': unread_count
+        }, broadcast=True)
 
 @socketio.on('remove_reaction')
 def handle_remove_reaction(data):
