@@ -23,76 +23,73 @@ document.addEventListener('DOMContentLoaded', function () {
         socket.emit('join_room', { room: room, recipient_id: recipientId });
     });
 
-socket.on('receive_message', function (data) {
-    const messageElement = document.createElement('div');
-    messageElement.classList.add('message-item');
-    messageElement.setAttribute('data-id', data.id); 
-
-    messageElement.addEventListener('mousedown', function (event) {
-        if (event.detail === 2) {
-            event.preventDefault();
-        }
-    });
-
-    if (String(data.sender) === String(sender)) {
-        messageElement.classList.add('sent');
-        messageElement.innerHTML = `
-            <strong>You:</strong> ${data.content} 
-            ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
-            <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
-            <span class="read-status">${data.read ? 'Read' : ''}</span>
-            <span class="message-reaction" id="reaction-${data.id}">
-                <!-- Реакция будет отображаться здесь -->
-            </span>
-            <div class="reactions" id="reactions-${data.id}" style="display: none;">
-                <button class="reaction" data-message-id="${data.id}" data-reaction="like">👍</button>
-                <button class="reaction" data-message-id="${data.id}" data-reaction="dislike">👎</button>
-                <button class="reaction" data-message-id="${data.id}" data-reaction="heart">❤️</button>
-                <button class="reaction" data-message-id="${data.id}" data-reaction="smile">😊</button>
-                <button class="reaction" data-message-id="${data.id}" data-reaction="sad">😢</button>
-                <button class="close-reactions" data-message-id="${data.id}">❌</button>
-            </div>
-        `;
-    } else {
-        messageElement.classList.add('received');
-        messageElement.innerHTML = `
-            <strong>${data.sender_username}:</strong> ${data.content}
-            ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
-            <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
-            <span class="message-reaction" id="reaction-${data.id}">
-                <!-- Реакция будет отображаться здесь -->
-            </span>
-            <div class="reactions" id="reactions-${data.id}" style="display: none;">
-                <button class="reaction" data-message-id="${data.id}" data-reaction="like">👍</button>
-                <button class="reaction" data-message-id="${data.id}" data-reaction="dislike">👎</button>
-                <button class="reaction" data-message-id="${data.id}" data-reaction="heart">❤️</button>
-                <button class="reaction" data-message-id="${data.id}" data-reaction="smile">😊</button>
-                <button class="reaction" data-message-id="${data.id}" data-reaction="sad">😢</button>
-                <button class="close-reactions" data-message-id="${data.id}">❌</button>
-            </div>
-        `;
-        
-        socket.emit('mark_as_read', {
-            message_id: data.id,
-            sender_id: data.sender,
+    socket.on('receive_message', function (data) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message-item');
+        messageElement.setAttribute('data-id', data.id); 
+    
+        messageElement.addEventListener('mousedown', function (event) {
+            if (event.detail === 2) {
+                event.preventDefault();
+            }
         });
-    }
-
-
-    messagesContainer.appendChild(messageElement);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-    messageElement.addEventListener('dblclick', function () {
-        const reactionContainer = document.getElementById(`reaction-${data.id}`);
-        
-        if (reactionContainer.textContent !== '') {
-            removeReaction(data.id);
+    
+        const messageContent = `
+            ${data.content}
+            ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
+            <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
+            <span class="message-reaction" id="reaction-${data.id}">
+                <!-- Реакция будет отображаться здесь -->
+            </span>
+            <div class="reactions" id="reactions-${data.id}" style="display: none;">
+                <button class="reaction" data-message-id="${data.id}" data-reaction="like">👍</button>
+                <button class="reaction" data-message-id="${data.id}" data-reaction="dislike">👎</button>
+                <button class="reaction" data-message-id="${data.id}" data-reaction="heart">❤️</button>
+                <button class="reaction" data-message-id="${data.id}" data-reaction="smile">😊</button>
+                <button class="reaction" data-message-id="${data.id}" data-reaction="sad">😢</button>
+                <button class="close-reactions" data-message-id="${data.id}">❌</button>
+            </div>
+        `;
+    
+        if (String(data.sender) === String(sender)) {
+            messageElement.classList.add('sent');
+            messageElement.innerHTML = `
+                <strong>You:</strong> ${messageContent}
+                <span class="read-status">${data.read ? 'Read' : ''}</span>
+            `;
         } else {
-            toggleReactionMenu(data.id);
+            messageElement.classList.add('received');
+            messageElement.innerHTML = `
+                <strong>${data.sender_username}:</strong> ${messageContent}
+            `;
+    
+            socket.emit('mark_as_read', {
+                message_id: data.id,
+                sender_id: data.sender,
+            });
         }
+    
+        messagesContainer.appendChild(messageElement);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+        const currentUserId = document.getElementById('messages').dataset.sender;
+    
+        messageElement.addEventListener('dblclick', function () {
+            const reactionContainer = document.getElementById(`reaction-${data.id}`);
+            
+            if (String(data.sender) !== String(currentUserId)) {
+                if (reactionContainer && reactionContainer.textContent.trim() !== '') {
+                    removeReaction(data.id); 
+                } else {
+                    toggleReactionMenu(data.id);
+                }
+            } else {
+                console.warn('Нельзя удалять или добавлять реакции на свои сообщения');
+            }
+        });
     });
-});
-
+    
+    
 document.getElementById('messages').addEventListener('click', function (event) {
     if (event.target && event.target.classList.contains('reaction')) {
         const messageId = event.target.getAttribute('data-message-id');
@@ -106,63 +103,6 @@ document.getElementById('messages').addEventListener('click', function (event) {
         document.getElementById(`reactions-${messageId}`).style.display = 'none'; 
     }
 });
-
-function toggleReactionMenu(messageId) {
-    const reactionMenu = document.getElementById(`reactions-${messageId}`);
-    const allReactionMenus = document.querySelectorAll('.reactions');
-
-    allReactionMenus.forEach(function(menu) {
-        if (menu !== reactionMenu) {
-            menu.style.display = 'none';
-        }
-    });
-
-    if (reactionMenu.style.display === 'none' || reactionMenu.style.display === '') {
-        reactionMenu.style.display = 'block';
-    } else {
-        reactionMenu.style.display = 'none';
-    }
-}
-
-function sendReaction(messageId, reactionType) {
-    socket.emit('send_reaction', {
-        room: room,
-        sender: sender,
-        recipient_id: recipientId,
-        message_id: messageId,
-        reaction_type: reactionType,
-    });
-
-    const reactionContainer = document.getElementById(`reaction-${messageId}`);
-    reactionContainer.textContent = getReactionSymbol(reactionType);
-}
-
-function removeReaction(messageId) {
-    const room = document.getElementById('messages').dataset.room;
-    const sender = document.getElementById('messages').dataset.sender;
-    const recipientId = document.getElementById('messages').dataset.recipient;
-
-    socket.emit('remove_reaction', {
-        room: room,
-        sender: sender,
-        recipient_id: recipientId,
-        message_id: messageId,
-    });
-
-    const reactionContainer = document.getElementById(`reaction-${messageId}`);
-    reactionContainer.textContent = ''; 
-}
-
-function getReactionSymbol(reactionType) {
-    switch (reactionType) {
-        case 'like': return '👍';
-        case 'dislike': return '👎';
-        case 'heart': return '❤️';
-        case 'smile': return '😊';
-        case 'sad': return '😢';
-        default: return '';
-    }
-}
 
 
     socket.on('update_message_status', function (data) {
@@ -436,6 +376,18 @@ function removeReaction(messageId) {
     const room = document.getElementById('messages').dataset.room;
     const sender = document.getElementById('messages').dataset.sender;
     const recipientId = document.getElementById('messages').dataset.recipient;
+    const currentUserId = document.getElementById('messages').dataset.sender;
+
+    const messageElement = document.querySelector(`.message-item[data-id="${messageId}"]`);
+
+    let authorId = null;
+    if (messageElement) {
+        authorId = messageElement.getAttribute('data-author-id');
+    }
+    if (authorId === currentUserId) {
+        return; 
+    }
+
 
     socket.emit('remove_reaction', {
         room: room,
