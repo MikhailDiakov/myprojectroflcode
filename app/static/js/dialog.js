@@ -13,11 +13,31 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     setTimeout(scrollToBottom, 100);
+    
 
     if (performance.getEntriesByType('navigation')[0].type === 'reload') {
         window.location.href = '/dialog';
         return;
     }
+
+    function processMessages() {
+        const messageItems = messagesContainer.querySelectorAll('.message-item');
+        messageItems.forEach(function(messageItem) {
+            const content = messageItem.querySelector('.message-content');
+            if (content) {
+                content.innerHTML = createClickableLinks(content.innerHTML);
+            }
+        });
+    }
+
+    function createClickableLinks(text) {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        return text.replace(urlRegex, function (url) {
+            return `<a href="${url}" target="_blank" class="message-link" title="${url}">${url}</a>`;
+        });
+    }
+
+    processMessages();
 
     socket.on('connect', function () {
         socket.emit('join_room', { room: room, recipient_id: recipientId });
@@ -26,16 +46,16 @@ document.addEventListener('DOMContentLoaded', function () {
     socket.on('receive_message', function (data) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message-item');
-        messageElement.setAttribute('data-id', data.id); 
+        messageElement.setAttribute('data-id', data.id);
     
         messageElement.addEventListener('mousedown', function (event) {
             if (event.detail === 2) {
                 event.preventDefault();
             }
         });
-    
+        
         const messageContent = `
-            ${data.content}
+            ${createClickableLinks(data.content)}
             ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
             <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
             <span class="message-reaction" id="reaction-${data.id}">
@@ -68,26 +88,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 sender_id: data.sender,
             });
         }
-        
     
         messagesContainer.appendChild(messageElement);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     
         const currentUserId = document.getElementById('messages').dataset.sender;
+
     
         messageElement.addEventListener('dblclick', function () {
             const reactionContainer = document.getElementById(`reaction-${data.id}`);
-            
+    
             if (String(data.sender) !== String(currentUserId)) {
                 if (reactionContainer && reactionContainer.textContent.trim() !== '') {
-                    removeReaction(data.id); 
+                    removeReaction(data.id);
                 } else {
                     toggleReactionMenu(data.id);
                 }
-            } 
+            }
         });
     });
-    
     
 document.getElementById('messages').addEventListener('click', function (event) {
     if (event.target && event.target.classList.contains('reaction')) {

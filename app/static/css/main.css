@@ -991,11 +991,11 @@ body.light.reactions{
     color: darkred; 
 }
 .message-item {
-    user-select: text; /* Включаем возможность выделения текста по умолчанию */
+    user-select: text; 
 }
 
 .no-select {
-    user-select: none; /* Отключаем выделение текста при двойном клике */
+    user-select: none; 
 }
 
 
