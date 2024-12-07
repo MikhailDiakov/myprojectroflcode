@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded',async function () {
     const socket = io();
 
     const room = document.getElementById('messages').dataset.room;
@@ -14,36 +14,138 @@ document.addEventListener('DOMContentLoaded', function () {
 
     setTimeout(scrollToBottom, 100);
     
-
     if (performance.getEntriesByType('navigation')[0].type === 'reload') {
         window.location.href = '/dialog';
         return;
     }
 
-    function processMessages() {
+    async function processMessages() {
         const messageItems = messagesContainer.querySelectorAll('.message-item');
-        messageItems.forEach(function(messageItem) {
+        for (const messageItem of messageItems) {
             const content = messageItem.querySelector('.message-content');
             if (content) {
-                content.innerHTML = createClickableLinks(content.innerHTML);
+                const updatedContent = await createClickableLinks(content.innerHTML);
+                content.innerHTML = updatedContent;
             }
-        });
+        }
     }
-
-    function createClickableLinks(text) {
+    
+    
+    async function createClickableLinks(text) {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
-        return text.replace(urlRegex, function (url) {
-            return `<a href="${url}" target="_blank" class="message-link" title="${url}">${url}</a>`;
-        });
+        const matches = text.match(urlRegex);
+    
+        if (!matches) return text;
+    
+        let updatedText = text;
+    
+        for (const url of matches) {
+            const linkPreviewHTML = await getLinkPreview(url);
+            if (linkPreviewHTML) {
+                updatedText = updatedText.replace(url, linkPreviewHTML);
+            }
+        }
+    
+        return updatedText;
     }
+    
+    function truncateText(text, maxLength) {
+        if (text.length > maxLength) {
+            return text.slice(0, maxLength) + '...';
+        }
+        return text;
+    }
+    
+    const cache = {};
 
-    processMessages();
+    async function getLinkPreview(url) {
+        if (cache[url]) {
+            return cache[url];
+        }
+    
+        const apiKey = '429986caad1046c49c3921d450b697fc';
+        const apiUrl = `https://api.linkpreview.net/?key=${apiKey}&q=${encodeURIComponent(url)}`;
+    
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Request failed');
+            
+            const data = await response.json();
+            
+            if (data.error || !data.title || !data.description || !data.image) {
+                console.warn(`Preview not available for URL: ${url}.`);
+                return `<a href="${url}" target="_blank" class="message-link">${url}</a>`;
+            }
+    
+            cache[url] = `
+                <div class="link-preview">
+                    <a href="${data.url}" target="_blank" class="link-preview-container">
+                        <img src="${data.image}" alt="${data.title}" class="link-preview-image" />
+                        <div class="link-preview-info">
+                            <h4 class="link-preview-title">${data.title}</h4>
+                            <p class="link-preview-description">${truncateText(data.description, 150)}</p>
+                        </div>
+                    </a>
+                </div>
+            `;
+            return cache[url];
+        } catch (error) {
+            console.error(error);
+            return `<a href="${url}" target="_blank" class="message-link">${url}</a>`;
+        }
+    }
+    
+    
+    const style = document.createElement('style');
+    style.textContent = `
+    .link-preview {
+        display: flex;
+        align-items: center;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        transition: box-shadow 0.3s ease;
+    }
+    .link-preview:hover {
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    .link-preview-container {
+        display: flex;
+        text-decoration: none;
+        color: inherit;
+    }
+    .link-preview-image {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+    }
+    .link-preview-info {
+        padding: 10px;
+    }
+    .link-preview-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    .link-preview-description {
+        margin: 5px 0 0;
+        font-size: 14px;
+        color: #555;
+    }
+    `;
+    document.head.appendChild(style);
+    
+    await processMessages();
+    scrollToBottom(); 
 
     socket.on('connect', function () {
         socket.emit('join_room', { room: room, recipient_id: recipientId });
     });
 
-    socket.on('receive_message', function (data) {
+    socket.on('receive_message', async function (data) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message-item');
         messageElement.setAttribute('data-id', data.id);
@@ -53,9 +155,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 event.preventDefault();
             }
         });
-        
+    
+        const clickableContent = await createClickableLinks(data.content);
+    
         const messageContent = `
-            ${createClickableLinks(data.content)}
+            ${clickableContent}
             ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
             <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
             <span class="message-reaction" id="reaction-${data.id}">
@@ -93,7 +197,6 @@ document.addEventListener('DOMContentLoaded', function () {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     
         const currentUserId = document.getElementById('messages').dataset.sender;
-
     
         messageElement.addEventListener('dblclick', function () {
             const reactionContainer = document.getElementById(`reaction-${data.id}`);
@@ -107,6 +210,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+    
     
 document.getElementById('messages').addEventListener('click', function (event) {
     if (event.target && event.target.classList.contains('reaction')) {

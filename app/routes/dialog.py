@@ -9,6 +9,9 @@ from io import BytesIO
 from PIL import Image
 import os
 from werkzeug.utils import secure_filename
+import requests
+from bs4 import BeautifulSoup
+
 
 user_last_activity = {}
 
@@ -299,7 +302,6 @@ def handle_reaction(data):
             read=False
         ).count()
 
-
     emit('update_last_message', {
             'sender_id': sender_id,
             'sender_username': sender_username,
@@ -325,3 +327,4 @@ def handle_remove_reaction(data):
     socketio.emit('remove_reaction', {
         'message_id': data['message_id']
     }, room=data['room'])
+
