@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, session,jsonify
 from flask_socketio import join_room, emit, leave_room
 from ..models import User, Message, db, Reaction
 from datetime import datetime
@@ -9,9 +9,6 @@ from io import BytesIO
 from PIL import Image
 import os
 from werkzeug.utils import secure_filename
-import requests
-from bs4 import BeautifulSoup
-
 
 user_last_activity = {}
 
@@ -201,6 +198,11 @@ def handle_send_message(data):
             'unread_count': unread_count
         }, broadcast=True)
 
+        unread_count_all = Message.query.filter_by(
+            recipient_id=recipient_id,
+            read=False
+        ).count()
+        emit('update_unread_count', {'unread_count_all': unread_count_all, 'recipient_id': recipient_id}, broadcast=True)
 
 
 @socketio.on('mark_as_read')

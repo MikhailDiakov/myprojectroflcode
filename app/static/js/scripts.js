@@ -3,11 +3,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const currentUserId = document.body.dataset.sender; 
 
+    const unreadCountElement = document.getElementById('unread-count');
+    const cachedUnreadCount = localStorage.getItem('unreadCount');
+    if (unreadCountElement && cachedUnreadCount !== null) {
+        unreadCountElement.textContent = cachedUnreadCount; 
+    }
+
+    socket.on('update_unread_count', function (data) {
+        if (data.recipient_id === currentUserId) {
+            if (unreadCountElement) {
+                unreadCountElement.textContent = data.unread_count_all;
+                localStorage.setItem('unreadCount', data.unread_count_all);
+            }
+        }
+    });
     socket.on('update_last_message', function (data) {
         if (data.recipient_id !== currentUserId) return;
 
         showToast(data);
     });
+    
 });
 
 function showToast(data) {

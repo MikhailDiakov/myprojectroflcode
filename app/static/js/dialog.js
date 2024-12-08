@@ -143,9 +143,7 @@ document.addEventListener('DOMContentLoaded',async function () {
     }
     `;
     document.head.appendChild(style);
-    
-    await processMessages();
-    scrollToBottom(); 
+    processMessages();
 
     socket.on('connect', function () {
         socket.emit('join_room', { room: room, recipient_id: recipientId });
@@ -218,6 +216,7 @@ document.addEventListener('DOMContentLoaded',async function () {
     });
     
     
+    
 document.getElementById('messages').addEventListener('click', function (event) {
     if (event.target && event.target.classList.contains('reaction')) {
         const messageId = event.target.getAttribute('data-message-id');
@@ -263,12 +262,19 @@ document.getElementById('messages').addEventListener('click', function (event) {
         }
     });
 
+    document.getElementById('message-form').addEventListener('submit', function (event) {
+        event.preventDefault(); 
+        handleFormSubmit();
+    });
+    
     messageInput.addEventListener('keypress', function (event) {
         if (event.key === 'Enter') {
             event.preventDefault();
-            document.getElementById('message-form').dispatchEvent(new Event('submit'));
+            document.getElementById('message-form').requestSubmit(); 
         }
     });
+    
+    
 
     setTimeout(function () {
         messageInput.focus();

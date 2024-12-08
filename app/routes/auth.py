@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
 from werkzeug.utils import secure_filename
 import os
-from ..models import User, db, Article, LoginAttempt, AvatarChangeHistory
+from ..models import User, db, Article, LoginAttempt, AvatarChangeHistory, Message
 import re
 from .. import socketio
 from flask_socketio import emit
@@ -210,4 +210,13 @@ def handle_user_connected_to_site():
             user.is_online = True
             db.session.commit()
 
+        unread_count_all = Message.query.filter_by(
+            recipient_id=user_id,
+            read=False
+        ).count()
+
         emit('status_update', {'user_id': user_id, 'status': 'online'}, broadcast=True)
+        emit('update_unread_count', {
+    'unread_count_all': unread_count_all,
+    'recipient_id': str(user_id)
+}, broadcast=True)
