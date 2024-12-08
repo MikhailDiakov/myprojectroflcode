@@ -88,8 +88,10 @@ Dialogs
             }
         });
 
-    socket.on('update_last_message', function (data) {
-    console.log(data)
+
+socket.on('update_last_message', function (data) {
+    if (data.recipient_id !== currentUserId) return;
+
     const dialogList = document.querySelector('.dialog-list');
     let dialogItem = document.querySelector(`#dialog-user-${data.sender_id}`);
 
@@ -139,7 +141,6 @@ Dialogs
         dialogList.prepend(dialogItem);
     }
 });
-
     });
 </script>
 {% endblock %}
