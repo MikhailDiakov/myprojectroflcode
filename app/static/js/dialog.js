@@ -64,7 +64,6 @@ document.addEventListener('DOMContentLoaded',async function () {
             return cache[url];
         }
     
-        const apiKey = '429986caad1046c49c3921d450b697fc';
         const apiUrl = `https://api.linkpreview.net/?key=${apiKey}&q=${encodeURIComponent(url)}`;
     
         try {

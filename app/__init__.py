@@ -21,6 +21,7 @@ class Config:
     SECRET_KEY = 'your-secret-key'  #Replace with your secret key
     SQLALCHEMY_DATABASE_URI = 'sqlite:///iambored.db' 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    LINKPREVIEW_API_KEY = '7c80729903a4c7a5b55dd4beb745f556'  #If you wanna change to your API key https://my.linkpreview.net/
             """)
 
     app.config.from_object('instance.config.Config')

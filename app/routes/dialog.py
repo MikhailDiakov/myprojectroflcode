@@ -9,6 +9,8 @@ from io import BytesIO
 from PIL import Image
 import os
 from werkzeug.utils import secure_filename
+from instance.config import Config
+
 
 user_last_activity = {}
 
@@ -86,7 +88,7 @@ def dialog(username):
 
     reactions = Reaction.query.filter(Reaction.message_id.in_([msg.id for msg in messages])).all()
 
-    return render_template('dialog/dialog.html', recipient=recipient, messages=messages, room=room, reactions=reactions, get_reaction_symbol=get_reaction_symbol)
+    return render_template('dialog/dialog.html', recipient=recipient, messages=messages, room=room, reactions=reactions, get_reaction_symbol=get_reaction_symbol,api_key=Config.LINKPREVIEW_API_KEY)
 
 @socketio.on('join_room')
 def handle_join_room(data):
