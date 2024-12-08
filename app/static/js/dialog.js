@@ -61,7 +61,6 @@ document.addEventListener('DOMContentLoaded',async function () {
     async function getLinkPreview(url) {
         if (cache[url]) {
             const sizeInBytes = new Blob([JSON.stringify(cache[url])]).size;
-            console.log(`Размер записи для ${url}: ${sizeInBytes} байт`);
             return cache[url];
         }
     
@@ -75,7 +74,6 @@ document.addEventListener('DOMContentLoaded',async function () {
             const data = await response.json();
     
             if (data.error || !data.title || !data.description || !data.image) {
-                console.warn(`Preview not available for URL: ${url}.`);
                 return `<a href="${url}" target="_blank" class="message-link">${url}</a>`;
             }
     
@@ -96,7 +94,6 @@ document.addEventListener('DOMContentLoaded',async function () {
     
             return previewHTML;
         } catch (error) {
-            console.error(error);
             return `<a href="${url}" target="_blank" class="message-link">${url}</a>`;
         }
     }    
@@ -143,7 +140,12 @@ document.addEventListener('DOMContentLoaded',async function () {
     }
     `;
     document.head.appendChild(style);
-    processMessages();
+    async function main() {
+        await processMessages();
+        setTimeout(scrollToBottom, 100);
+      }
+
+    main()
 
     socket.on('connect', function () {
         socket.emit('join_room', { room: room, recipient_id: recipientId });
