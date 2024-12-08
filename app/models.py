@@ -16,6 +16,24 @@ class User(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+class LoginAttempt(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(45), nullable=False)
+    user_agent = db.Column(db.String(200), nullable=False)
+    failed_attempts = db.Column(db.Integer, default=0) 
+    lockout_time = db.Column(db.DateTime, nullable=True)
+
+    def is_locked_out(self):
+        if self.lockout_time and datetime.utcnow() < self.lockout_time:
+            return True
+        return False
+
+class AvatarChangeHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    avatar_change_count = db.Column(db.Integer, default=0)
+    last_avatar_change = db.Column(db.DateTime, nullable=True)
 
 
 class Article(db.Model):
