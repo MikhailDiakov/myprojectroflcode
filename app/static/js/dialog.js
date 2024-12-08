@@ -56,10 +56,12 @@ document.addEventListener('DOMContentLoaded',async function () {
         return text;
     }
     
-    const cache = {};
+    const cache = JSON.parse(localStorage.getItem('linkPreviewCache')) || {};
 
     async function getLinkPreview(url) {
         if (cache[url]) {
+            const sizeInBytes = new Blob([JSON.stringify(cache[url])]).size;
+            console.log(`Размер записи для ${url}: ${sizeInBytes} байт`);
             return cache[url];
         }
     
@@ -71,13 +73,13 @@ document.addEventListener('DOMContentLoaded',async function () {
             if (!response.ok) throw new Error('Request failed');
             
             const data = await response.json();
-            
+    
             if (data.error || !data.title || !data.description || !data.image) {
                 console.warn(`Preview not available for URL: ${url}.`);
                 return `<a href="${url}" target="_blank" class="message-link">${url}</a>`;
             }
     
-            cache[url] = `
+            const previewHTML = `
                 <div class="link-preview">
                     <a href="${data.url}" target="_blank" class="link-preview-container">
                         <img src="${data.image}" alt="${data.title}" class="link-preview-image" />
@@ -88,12 +90,16 @@ document.addEventListener('DOMContentLoaded',async function () {
                     </a>
                 </div>
             `;
-            return cache[url];
+    
+            cache[url] = previewHTML;
+            localStorage.setItem('linkPreviewCache', JSON.stringify(cache));
+    
+            return previewHTML;
         } catch (error) {
             console.error(error);
             return `<a href="${url}" target="_blank" class="message-link">${url}</a>`;
         }
-    }
+    }    
     
     
     const style = document.createElement('style');
