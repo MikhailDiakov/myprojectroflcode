@@ -85,6 +85,13 @@ socket.on('disconnect', function() {
 window.addEventListener('beforeunload', function() {
 });
     </script>
+    <script>
+        const authToken = document.cookie.split('; ').find(row => row.startsWith('auth_token='));
+        if (authToken) {
+            console.log('Auto-login is enabled.');
+        }
+    </script>
+    
 </body>
 
 </html>

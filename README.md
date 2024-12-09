@@ -34,6 +34,7 @@ A **prototype social network** built with Flask.
      ```
 
    Copy the generated key and paste it in place of `'your-secret-key'`.
+   If you wanna change to your API key https://my.linkpreview.net/.
 
 2. **Set up a virtual environment**:  
    - For Linux/Mac:  

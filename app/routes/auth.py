@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, make_response
 from werkzeug.utils import secure_filename
 import os
 from ..models import User, db, Article, LoginAttempt, AvatarChangeHistory, Message
@@ -7,6 +7,7 @@ from .. import socketio
 from flask_socketio import emit
 import uuid
 from datetime import datetime, timedelta
+import hashlib
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -75,11 +76,16 @@ def login():
             session['username'] = user.username
             session['avatar_url'] = user.avatar_url
 
+            token = hashlib.sha256(f"{user.id}{user.username}".encode()).hexdigest()
+
             if login_attempt:
                 db.session.delete(login_attempt)
                 db.session.commit()
+
+            resp = make_response(redirect(url_for('main.index')))
+            resp.set_cookie('auth_token', token, max_age=60*60*24*30, httponly=True, secure=True)
             
-            return redirect(url_for('main.index'))
+            return resp
         
         if not login_attempt:
             login_attempt = LoginAttempt(
@@ -101,11 +107,32 @@ def login():
 
     return render_template('auth/login.html')
 
+@auth_bp.before_app_request
+def auto_login():
+    if 'user_id' not in session:
+        token = request.cookies.get('auth_token')
+        if token:
+            user = verify_token(token)
+            if user:
+                session['user_id'] = user.id
+                session['username'] = user.username
+                session['avatar_url'] = user.avatar_url
+
+
+def verify_token(token):
+    for user in User.query.all():
+        expected_token = hashlib.sha256(f"{user.id}{user.username}".encode()).hexdigest()
+        if token == expected_token:
+            return user
+    return None
 
 @auth_bp.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('main.index'))
+    resp = make_response(redirect(url_for('main.index')))
+    resp.delete_cookie('auth_token')
+    return resp
+
 
 @auth_bp.route('/profile/<username>')
 def user_profile(username):
