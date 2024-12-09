@@ -133,6 +133,61 @@ def logout():
     resp.delete_cookie('auth_token')
     return resp
 
+@auth_bp.route('/change_email', methods=['POST'])
+def change_email():
+    new_email = request.form.get('new_email')
+    old_password = request.form.get('old_password')
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return redirect(url_for('auth.login'))
+
+    user = User.query.get(user_id)
+    if not user:
+        return redirect(url_for('auth.login'))
+
+    if not user.check_password(old_password):
+        error_message = "Incorrect password."
+        return render_template('auth/edit_profile.html', error_message=error_message, user=user)
+
+    if User.query.filter_by(email=new_email).first():
+        error_message = "This email is already in use."
+        return render_template('auth/profile.html', error_message=error_message, user=user)
+
+    user.email = new_email
+    db.session.commit()
+    session['username'] = user.username
+    success_message = "Email changed successfully."
+    return render_template('auth/edit_profile.html', error_message=success_message, user=user)
+
+@auth_bp.route('/change_password', methods=['POST'])
+def change_password():
+    current_password = request.form.get('current_password')
+    new_password = request.form.get('new_password')
+    confirm_new_password = request.form.get('confirm_new_password')
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return redirect(url_for('auth.login'))
+
+    user = User.query.get(user_id)
+    if not user:
+        return redirect(url_for('auth.login'))
+
+    if not user.check_password(current_password):
+        error_message = "Incorrect current password."
+        return render_template('auth/edit_profile.html', error_message=error_message, user=user)
+
+    if new_password != confirm_new_password:
+        error_message = "Passwords do not match."
+        return render_template('auth/edit_profile.html', error_message=error_message, user=user)
+
+    user.set_password(new_password)
+    db.session.commit()
+    success_message = "Password changed successfully."
+    return render_template('auth/edit_profile.html', error_message=success_message, user=user)
+
+
 
 @auth_bp.route('/profile/<username>')
 def user_profile(username):
