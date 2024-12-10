@@ -18,7 +18,7 @@ Chat with {{ recipient.username }}
         <span class="message-content">
             {% if message.content %}
                 <span class="message-text">
-                    {% if message.edited %}
+                    {% if message.edited and message.deleted != 1%}
                         {{ message.content }} <span class="edited-label">(Edited)</span>
                     {% else %}
                         {{ message.content }}
