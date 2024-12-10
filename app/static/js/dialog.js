@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded',async function () {
 
     const messagesContainer = document.getElementById('messages');
     const messageInput = document.getElementById('message-input');
+    
 
     function scrollToBottom() {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -18,6 +19,95 @@ document.addEventListener('DOMContentLoaded',async function () {
         window.location.href = '/dialog';
         return;
     }
+
+    const editButtons = document.querySelectorAll('.edit-message');
+    const deleteButtons = document.querySelectorAll('.delete-message');
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const messageElement = button.closest('.message-item');
+            const messageTextElement = messageElement.querySelector('.message-text');
+            const messageId = messageElement.dataset.id;
+
+            if (confirm("Are you sure you want to delete this message?")) {
+                messageTextElement.innerHTML = "MESSAGE DELETED";
+                messageElement.classList.add('deleted');
+
+                const editButton = messageElement.querySelector('.edit-message');
+                const deleteButton = messageElement.querySelector('.delete-message');
+                editButton.style.display = 'none';
+                deleteButton.style.display = 'none';
+
+                socket.emit('delete_message', {
+                    message_id: messageId
+                });
+
+            }
+        });
+    });
+
+    editButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const messageElement = button.closest('.message-item');
+            const messageTextElement = messageElement.querySelector('.message-text');
+            const messageId = messageElement.dataset.id; 
+            const currentText = messageTextElement.innerHTML;
+
+            button.style.display = 'none';
+            const deleteButton = messageElement.querySelector('.delete-message');
+            deleteButton.style.display = 'none';
+
+            messageTextElement.innerHTML = `<div contenteditable="true" class="edit-text" style="width: 100%; min-height: 50px;">${currentText}</div>`;
+            const editableText = messageTextElement.querySelector('.edit-text');
+            const editedLabel = messageElement.querySelector('.edited-label');
+            if (editedLabel) {
+                editedLabel.remove();
+            }
+            setTimeout(scrollToBottom, 100);
+            setTimeout(() => {
+                editableText.focus();
+            }, 100);
+
+            const saveButton = document.createElement('button');
+            saveButton.innerText = 'Save';
+            saveButton.classList.add('save-message');
+            messageElement.appendChild(saveButton);
+
+            saveButton.addEventListener('click', function () {
+                const newContent = editableText.innerHTML.trim();
+
+                if (newContent !== currentText) {  
+                    let editedLabel = messageTextElement.querySelector('.edited-label');
+                    if (!editedLabel) {
+                        editedLabel = document.createElement('span');
+                        editedLabel.classList.add('edited-label');
+                        editedLabel.style.color = 'gray';
+                        editedLabel.style.marginLeft = '10px';
+                        editedLabel.textContent = '(Edited)';
+                        messageTextElement.appendChild(editedLabel);
+                    }
+
+                    socket.emit('edit_message', {
+                        message_id: messageId,
+                        content: newContent
+                    });
+
+                    messageTextElement.innerHTML = newContent;
+                }
+
+                saveButton.remove();
+                button.style.display = 'inline';
+                deleteButton.style.display = 'inline';
+            });
+
+            editableText.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    saveButton.click();
+                }
+            });
+        });
+    });
     
     async function processMessages() {
         const messageItems = messagesContainer.querySelectorAll('.message-item');
@@ -265,8 +355,13 @@ document.addEventListener('DOMContentLoaded',async function () {
     
             deleteButton.addEventListener('click', function () {
                 if (confirm("Are you sure you want to delete this message?")) {
-                    messageTextElement.innerHTML = "MESSAGE DELETED";
+                    messageTextElement.innerHTML = "DELETED MESSAGE";
                     messageElement.classList.add('deleted');
+
+                    const editedLabel = messageElement.querySelector('.edited-label');
+                    if (editedLabel) {
+                        editedLabel.remove();
+                    }
     
                     editButton.style.display = 'none';
                     deleteButton.style.display = 'none';
