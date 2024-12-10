@@ -206,6 +206,46 @@ def handle_send_message(data):
         ).count()
         emit('update_unread_count', {'unread_count_all': unread_count_all, 'recipient_id': recipient_id}, broadcast=True)
 
+@socketio.on('delete_message')
+def handle_delete_message(data):
+    message_id = data.get('message_id')
+    user_id = session.get('user_id')
+    
+    message = Message.query.get(message_id)
+    
+    if message and message.sender_id == user_id:
+        message.content = "DELETED MESSAGE"
+        message.deleted = True
+        db.session.commit()
+
+        room = f"chat_{min(message.sender_id, message.recipient_id)}_{max(message.sender_id, message.recipient_id)}"
+        
+        emit('update_message', {
+            'id': message_id,
+            'content': "DELETED",
+            'deleted': True
+        }, room=room)
+
+@socketio.on('edit_message')
+def handle_edit_message(data):
+    message_id = data.get('message_id')
+    new_content = data.get('content')
+    user_id = session.get('user_id')
+
+    message = Message.query.get(message_id)
+
+    if message and message.sender_id == user_id:
+        message.content = new_content
+        message.edited = True
+        db.session.commit()
+
+        room = f"chat_{min(message.sender_id, message.recipient_id)}_{max(message.sender_id, message.recipient_id)}"
+        
+        emit('update_message', {
+            'id': message_id,
+            'content': new_content,
+            'edited': True
+        }, room=room)
 
 @socketio.on('mark_as_read')
 def handle_mark_as_read(data):

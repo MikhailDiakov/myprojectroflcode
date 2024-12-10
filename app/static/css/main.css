@@ -1037,3 +1037,64 @@ body.light.reactions{
     transform: translateY(0);
   }
   
+button.edit-message,
+button.delete-message {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+button.edit-message {
+    background-color: #9e9e9e;
+}
+
+button.delete-message {
+    background-color: #f44336;
+}
+
+button.edit-message:hover,
+button.delete-message:hover {
+    opacity: 0.8;
+}
+
+button.save-button {
+    background-color: #4caf50;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+button.save-button:hover {
+    opacity: 0.8;
+}
+body.dark .edit-text {
+    background-color: #333;
+    color: #fff;
+}
+body.light.edit-text {
+    background-color: #fff;
+    color: #333;
+}
+.edit-text {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px;
+    width: 100%;
+    min-height: 40px;
+    font-size: 16px;
+    outline: none;
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+.edited-label {
+    color: gray;
+    font-size: 12px;
+    margin-left: 10px;
+    vertical-align: middle;
+}

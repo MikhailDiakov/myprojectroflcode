@@ -72,6 +72,8 @@ class Message(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     read = db.Column(db.Boolean, default=False) 
     reactions = db.Column(db.Boolean, default=False) 
+    edited = db.Column(db.Boolean, default=False)
+    deleted = db.Column(db.Boolean, default=False)
 
     sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_messages', lazy=True))
     recipient = db.relationship('User', foreign_keys=[recipient_id], backref=db.backref('received_messages', lazy=True))

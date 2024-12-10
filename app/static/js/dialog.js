@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded',async function () {
         window.location.href = '/dialog';
         return;
     }
-
+    
     async function processMessages() {
         const messageItems = messagesContainer.querySelectorAll('.message-item');
         for (const messageItem of messageItems) {
@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded',async function () {
         const clickableContent = await createClickableLinks(data.content);
     
         const messageContent = `
-            ${clickableContent}
+            <span class="message-text">${clickableContent}</span>
             ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
             <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
             <span class="message-reaction" id="reaction-${data.id}">
@@ -185,7 +185,98 @@ document.addEventListener('DOMContentLoaded',async function () {
             messageElement.innerHTML = `
                 <strong>You:</strong> ${messageContent}
                 <span class="read-status">${data.read ? 'Read' : ''}</span>
+                <button class="edit-message" data-message-id="${data.id}">Edit</button>
+                <button class="delete-message" data-message-id="${data.id}">Delete</button>
             `;
+    
+            const editButton = messageElement.querySelector('.edit-message');
+            const deleteButton = messageElement.querySelector('.delete-message');
+            const messageTextElement = messageElement.querySelector('.message-text');
+    
+            const saveMessage = function (newContent) {
+                data.content = newContent;
+                messageTextElement.innerHTML = newContent;
+
+            const messageWrapper = messageTextElement.parentNode;
+            if (messageWrapper) {
+                let editedLabel = messageWrapper.querySelector('.edited-label');
+                if (!editedLabel) {
+                    editedLabel = document.createElement('span');
+                    editedLabel.classList.add('edited-label');
+                    editedLabel.style.color = 'gray';
+                    editedLabel.style.marginLeft = '10px';
+                    editedLabel.textContent = '(Edited)';
+                    messageWrapper.appendChild(editedLabel);
+                } else {
+                    console.log('Edited label already exists.');
+                }
+            } else {
+                console.error('Parent node for message text not found!');
+            }
+
+                editButton.innerHTML = 'Edit';
+                editButton.style.display = 'inline';
+                deleteButton.style.display = 'inline';
+    
+                editButton.removeEventListener('click', saveHandler);
+                editButton.addEventListener('click', editHandler);
+    
+                socket.emit('edit_message', {
+                    message_id: data.id,
+                    content: newContent
+                });
+            };
+    
+            const editHandler = function () {
+                const currentText = messageTextElement.innerHTML;
+    
+                editButton.style.display = 'none';
+                deleteButton.style.display = 'none';
+    
+                messageTextElement.innerHTML = `<div contenteditable="true" class="edit-text" style="width: 50%; height: 50px; overflow-y: auto;">${currentText}</div>`;
+                const editableText = messageTextElement.querySelector('.edit-text');
+                editableText.focus();
+    
+                editButton.innerHTML = 'Save';
+                editButton.style.display = 'inline';
+    
+                editButton.removeEventListener('click', editHandler);
+                editButton.addEventListener('click', saveHandler);
+
+                setTimeout(scrollToBottom, 100);
+                setTimeout(() => {
+                    editableText.focus();
+                }, 100);
+    
+                editableText.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        saveMessage(editableText.textContent);
+                    }
+                });
+            };
+    
+            const saveHandler = function () {
+                const editableText = messageTextElement.querySelector('.edit-text');
+                saveMessage(editableText.textContent);
+            };
+    
+            editButton.addEventListener('click', editHandler);
+    
+            deleteButton.addEventListener('click', function () {
+                if (confirm("Are you sure you want to delete this message?")) {
+                    messageTextElement.innerHTML = "MESSAGE DELETED";
+                    messageElement.classList.add('deleted');
+    
+                    editButton.style.display = 'none';
+                    deleteButton.style.display = 'none';
+    
+                    socket.emit('delete_message', {
+                        message_id: data.id
+                    });
+                }
+            });
+    
         } else {
             messageElement.classList.add('received');
             messageElement.innerHTML = `
@@ -197,7 +288,7 @@ document.addEventListener('DOMContentLoaded',async function () {
                 sender_id: data.sender,
             });
         }
-    
+
         messagesContainer.appendChild(messageElement);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     
@@ -214,6 +305,32 @@ document.addEventListener('DOMContentLoaded',async function () {
                 }
             }
         });
+    });
+    socket.on('update_message', function (data) {
+        const messageElement = document.querySelector(`[data-id="${data.id}"]`);
+    
+        if (data.deleted) {
+            const messageTextElement = messageElement.querySelector('.message-text');
+            messageTextElement.innerHTML = "DELETED MESSAGE";
+            messageElement.classList.add('deleted');
+        }
+    
+        if (data.edited) {
+            const messageTextElement = messageElement.querySelector('.message-text');
+            messageTextElement.innerHTML = data.content;
+    
+            let editedLabel = messageElement.querySelector('.edited-label');
+            if (!editedLabel) {
+                editedLabel = document.createElement('span');
+                editedLabel.classList.add('edited-label');
+                editedLabel.style.color = 'gray';
+                editedLabel.style.marginLeft = '10px';
+                editedLabel.textContent = '(Edited)';
+                messageTextElement.parentNode.appendChild(editedLabel); 
+            } else {
+                editedLabel.style.display = 'inline'; 
+            }
+        }
     });
     
     

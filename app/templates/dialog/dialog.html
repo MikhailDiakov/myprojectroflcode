@@ -14,11 +14,16 @@ Chat with {{ recipient.username }}
         <strong class="message-sender">
             {{ 'You' if message.sender_id == session['user_id'] else message.sender.username }}:
         </strong>
-        
 
         <span class="message-content">
             {% if message.content %}
-                {{ message.content }}
+                <span class="message-text">
+                    {% if message.edited %}
+                        {{ message.content }} <span class="edited-label">(Edited)</span>
+                    {% else %}
+                        {{ message.content }}
+                    {% endif %}
+                </span>
             {% endif %}
 
             {% if message.photo_url %}
@@ -26,46 +31,42 @@ Chat with {{ recipient.username }}
                 <img src="{{ url_for('static', filename=message.photo_url.split('static/', 1)[-1]) }}"
                      alt="Message photo" class="photo" />
             </div>
-        {% endif %}
+            {% endif %}
         </span>
+
         <span class="message-reaction" id="reaction-{{ message.id }}">
             {% for reaction in reactions %}
-            {% if reaction.message_id == message.id %}
-            <span>{{ get_reaction_symbol(reaction.reaction_type) }}</span>
-            {% endif %}
+                {% if reaction.message_id == message.id %}
+                    <span>{{ get_reaction_symbol(reaction.reaction_type) }}</span>
+                {% endif %}
             {% endfor %}
         </span>
-            
-    
-        <div class="reactions" id="reactions-{{ message.id }}" style="display: none;">
-            <button class="reaction" data-message-id="{{ message.id }}" data-reaction="like">
-                👍
-            </button>
-            <button class="reaction" data-message-id="{{ message.id }}" data-reaction="dislike">
-                👎
-            </button>
-            <button class="reaction" data-message-id="{{ message.id }}" data-reaction="heart">
-                ❤️
-            </button>
-            <button class="reaction" data-message-id="{{ message.id }}" data-reaction="smile">
-                😊
-            </button>
-            <button class="reaction" data-message-id="{{ message.id }}" data-reaction="sad">
-                😢
-            </button>
-            <button class="close-reactions" data-message-id="{{ message.id }}">❌</button> 
-        </div>
         
+        <div class="reactions" id="reactions-{{ message.id }}" style="display: none;">
+            <button class="reaction" data-message-id="{{ message.id }}" data-reaction="like">👍</button>
+            <button class="reaction" data-message-id="{{ message.id }}" data-reaction="dislike">👎</button>
+            <button class="reaction" data-message-id="{{ message.id }}" data-reaction="heart">❤️</button>
+            <button class="reaction" data-message-id="{{ message.id }}" data-reaction="smile">😊</button>
+            <button class="reaction" data-message-id="{{ message.id }}" data-reaction="sad">😢</button>
+            <button class="close-reactions" data-message-id="{{ message.id }}">❌</button>
+        </div>
+
         <span class="message-time" style="right: 0; bottom: 0; position: absolute;">
             {{ message.timestamp.strftime('%H:%M %d/%m') }}
         </span>
         
         {% if message.sender_id == session['user_id'] %}
         <span class="read-status">{{ 'Read' if message.read else '' }}</span>
+        
+        {% if not message.deleted %}
+        <button class="edit-message" data-message-id="{{ message.id }}">Edit</button>
+        <button class="delete-message" data-message-id="{{ message.id }}">Delete</button>
+        {% endif %}
         {% endif %}
     </div>
     {% endfor %}
 </div>
+
 
 <div id="typing-indicator-container"></div>
 
