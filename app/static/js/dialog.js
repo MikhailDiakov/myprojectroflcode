@@ -279,12 +279,15 @@ document.addEventListener('DOMContentLoaded',async function () {
     
         if (String(data.sender) === String(sender)) {
             messageElement.classList.add('sent');
+            const isLink = /https?:\/\/[^\s]+/.test(data.content);
+
             messageElement.innerHTML = `
                 <strong>You:</strong> ${messageContent}
                 <span class="read-status">${data.read ? 'Read' : ''}</span>
-                <button class="edit-message" data-message-id="${data.id}">🖍️</button>
+                <button class="edit-message" data-message-id="${data.id}" style="display: ${isLink ? 'none' : 'inline'};">🖍️</button>
                 <button class="delete-message" data-message-id="${data.id}">🗑️</button>
             `;
+            
     
             const editButton = messageElement.querySelector('.edit-message');
             const deleteButton = messageElement.querySelector('.delete-message');
