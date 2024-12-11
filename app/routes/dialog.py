@@ -155,6 +155,7 @@ def handle_send_message(data):
         image.save(file_path)
         
         photo_url = f'/static/uploads/photos/{filename}' 
+        content = ' '
 
     if sender_id and recipient_id:
         message = Message(
@@ -216,6 +217,7 @@ def handle_delete_message(data):
     if message and message.sender_id == user_id:
         message.content = "DELETED MESSAGE"
         message.deleted = True
+        message.photo_url = None
         db.session.commit()
 
         room = f"chat_{min(message.sender_id, message.recipient_id)}_{max(message.sender_id, message.recipient_id)}"
@@ -223,8 +225,10 @@ def handle_delete_message(data):
         emit('update_message', {
             'id': message_id,
             'content': "DELETED",
-            'deleted': True
+            'deleted': True,
+            'photo_url': None
         }, room=room)
+
 
 @socketio.on('edit_message')
 def handle_edit_message(data):

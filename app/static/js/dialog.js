@@ -25,13 +25,20 @@ document.addEventListener('DOMContentLoaded',async function () {
 
     deleteButtons.forEach(button => {
         button.addEventListener('click', function () {
-            const messageElement = button.closest('.message-item');
-            const messageTextElement = messageElement.querySelector('.message-text');
-            const messageId = messageElement.dataset.id;
+        const messageElement = button.closest('.message-item');
+        const messageTextElement = messageElement.querySelector('.message-text');
+        const messagePhotoElement = messageElement.querySelector('.message-photo');
+        const messageId = messageElement.dataset.id;
 
-            if (confirm("Are you sure you want to delete this message?")) {
+        if (confirm("Are you sure you want to delete this message?")) {
+            if (messageTextElement) {
                 messageTextElement.innerHTML = "MESSAGE DELETED";
-                messageElement.classList.add('deleted');
+            }
+            if (messagePhotoElement) {
+                messagePhotoElement.innerHTML = ""; 
+            }
+
+            messageElement.classList.add('deleted');
 
                 const editButton = messageElement.querySelector('.edit-message');
                 const deleteButton = messageElement.querySelector('.delete-message');
@@ -421,17 +428,23 @@ document.addEventListener('DOMContentLoaded',async function () {
     });
     socket.on('update_message', function (data) {
         const messageElement = document.querySelector(`[data-id="${data.id}"]`);
-    
+        
         if (data.deleted) {
             const messageTextElement = messageElement.querySelector('.message-text');
             messageTextElement.innerHTML = "DELETED MESSAGE";
             messageElement.classList.add('deleted');
+            
+
+            const messagePhotoElement = messageElement.querySelector('.message-photo');
+            if (messagePhotoElement) {
+                messagePhotoElement.remove();
+            }
         }
-    
+        
         if (data.edited) {
             const messageTextElement = messageElement.querySelector('.message-text');
             messageTextElement.innerHTML = data.content;
-    
+        
             let editedLabel = messageElement.querySelector('.edited-label');
             if (!editedLabel) {
                 editedLabel = document.createElement('span');
@@ -444,7 +457,15 @@ document.addEventListener('DOMContentLoaded',async function () {
                 editedLabel.style.display = 'inline'; 
             }
         }
+    
+        if (data.photo_url) {
+            const messagePhotoElement = messageElement.querySelector('.message-photo img');
+            if (messagePhotoElement) {
+                messagePhotoElement.src = data.photo_url;
+            }
+        }
     });
+    
     
     
     
