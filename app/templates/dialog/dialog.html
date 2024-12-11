@@ -58,8 +58,8 @@ Chat with {{ recipient.username }}
         <span class="read-status">{{ 'Read' if message.read else '' }}</span>
         
         {% if not message.deleted %}
-        <button class="edit-message" data-message-id="{{ message.id }}">Edit</button>
-        <button class="delete-message" data-message-id="{{ message.id }}">Delete</button>
+        <button class="edit-message" data-message-id="{{ message.id }}">🖍️</button>
+        <button class="delete-message" data-message-id="{{ message.id }}">🗑️</button>
         {% endif %}
         {% endif %}
     </div>

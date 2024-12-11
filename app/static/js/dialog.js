@@ -74,7 +74,14 @@ document.addEventListener('DOMContentLoaded',async function () {
             messageElement.appendChild(saveButton);
 
             saveButton.addEventListener('click', function () {
-                const newContent = editableText.innerHTML.trim();
+                const newContent = editableText.innerText.trim();
+
+                if (newContent === "") {
+                    alert("Message cannot be empty.");
+                    editableText.focus();
+                    return;
+                }
+
 
                 if (newContent !== currentText) {  
                     let editedLabel = messageTextElement.querySelector('.edited-label');
@@ -275,8 +282,8 @@ document.addEventListener('DOMContentLoaded',async function () {
             messageElement.innerHTML = `
                 <strong>You:</strong> ${messageContent}
                 <span class="read-status">${data.read ? 'Read' : ''}</span>
-                <button class="edit-message" data-message-id="${data.id}">Edit</button>
-                <button class="delete-message" data-message-id="${data.id}">Delete</button>
+                <button class="edit-message" data-message-id="${data.id}">🖍️</button>
+                <button class="delete-message" data-message-id="${data.id}">🗑️</button>
             `;
     
             const editButton = messageElement.querySelector('.edit-message');
@@ -285,7 +292,14 @@ document.addEventListener('DOMContentLoaded',async function () {
     
             const saveMessage = function (newContent) {
                 data.content = newContent;
+                if (newContent === "") {
+                    alert("Message cannot be empty.");
+                    editableText.focus();
+                    return;
+                }
+    
                 messageTextElement.innerHTML = newContent;
+                
 
             const messageWrapper = messageTextElement.parentNode;
             if (messageWrapper) {
@@ -304,7 +318,7 @@ document.addEventListener('DOMContentLoaded',async function () {
                 console.error('Parent node for message text not found!');
             }
 
-                editButton.innerHTML = 'Edit';
+                editButton.innerHTML = '🖍️';
                 editButton.style.display = 'inline';
                 deleteButton.style.display = 'inline';
     
@@ -332,6 +346,7 @@ document.addEventListener('DOMContentLoaded',async function () {
     
                 editButton.removeEventListener('click', editHandler);
                 editButton.addEventListener('click', saveHandler);
+                
 
                 setTimeout(scrollToBottom, 100);
                 setTimeout(() => {
