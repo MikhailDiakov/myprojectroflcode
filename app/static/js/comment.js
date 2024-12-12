@@ -68,7 +68,7 @@ function postComment() {
                 if (data.is_deletable) {
                     deleteButtonHtml = `
                         <button type="button" class="btn btn-primary delete-comment-btn"
-                            data-comment-id="${data.comment_id}" style="width: 85px; height: 25px; font-size: 12px;">
+                            data-comment-id="${data.comment_id}" style="width: 90px; height: 25px; font-size: 12px;">
                             Delete (1h)
                         </button>`;
                 }

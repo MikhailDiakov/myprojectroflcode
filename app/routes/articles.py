@@ -120,6 +120,8 @@ def like_article_ajax(article_id):
 
     return jsonify({'likes': likes_count, 'dislikes': dislikes_count})
 
+import html
+
 @article_bp.route('/<int:article_id>/comment', methods=['POST'])
 def add_comment_ajax(article_id):
     if 'user_id' not in session:
@@ -128,6 +130,8 @@ def add_comment_ajax(article_id):
     content = request.json.get('content')
     if not content or len(content) > 100:
         return jsonify({'error': 'Comment must be between 1 and 100 characters'}), 400
+
+    content = html.escape(content)
 
     new_comment = Comment(content=content, user_id=session['user_id'], article_id=article_id)
     db.session.add(new_comment)
@@ -142,8 +146,6 @@ def add_comment_ajax(article_id):
         'is_deletable': is_deletable,
         'comment_id': new_comment.id
     })
-
-
 
 @article_bp.route('/comment/delete/<int:comment_id>', methods=['POST'])
 def delete_comment(comment_id):

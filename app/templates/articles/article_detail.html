@@ -55,7 +55,7 @@
                 {% if (current_time - comment.date_posted).total_seconds() <= 3600 %} {% if
                     comment.user_id==session.get('user_id') %} <button type="button"
                     class="btn btn-primary delete-comment-btn" data-comment-id="{{ comment.id }}"
-                    style="width: 85px; height: 25px; font-size: 12px;">
+                    style="width: 90px; height: 25px; font-size: 12px;">
                     Delete (1h)
                     </button>
                     {% endif %}
