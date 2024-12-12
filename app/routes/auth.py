@@ -145,6 +145,15 @@ def change_email():
     user = User.query.get(user_id)
     if not user:
         return redirect(url_for('auth.login'))
+    
+    email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+    if not re.match(email_regex, new_email):
+        error_message = 'Invalid email address format.'
+        return render_template('auth/edit_profile.html', error_message=error_message, user=user)
+    
+    if len(new_email) > 255:
+        error_message = 'Email address is too long.'
+        return render_template('auth/edit_profile.html', error_message=error_message, user=user)
 
     if not user.check_password(old_password):
         error_message = "Incorrect password."
@@ -177,6 +186,10 @@ def change_password():
     if not user.check_password(current_password):
         error_message = "Incorrect current password."
         return render_template('auth/edit_profile.html', error_message=error_message, user=user)
+    
+    if len(new_password) < 8 or len(new_password) > 20:
+        error_message = 'Password must be between 8 and 20 characters.'
+        return render_template('auth/edit_profile.html', error_message=error_message, user=user)
 
     if new_password != confirm_new_password:
         error_message = "Passwords do not match."
@@ -186,7 +199,6 @@ def change_password():
     db.session.commit()
     success_message = "Password changed successfully."
     return render_template('auth/edit_profile.html', error_message=success_message, user=user)
-
 
 
 @auth_bp.route('/profile/<username>')
@@ -256,11 +268,12 @@ def edit_profile():
             history.last_avatar_change = now
             db.session.commit()
 
-        if bio:
+        if bio is not None:
             if len(bio) > 100:
                 error_message = "Bio is too long! It should be up to 100 characters."
                 return render_template('auth/edit_profile.html', error_message=error_message, user=user)
-            user.bio = bio
+
+            user.bio = bio if bio else ''
             db.session.commit()
 
         db.session.commit()
