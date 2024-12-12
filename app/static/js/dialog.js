@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded',async function () {
             const messageElement = button.closest('.message-item');
             const messageTextElement = messageElement.querySelector('.message-text');
             const messageId = messageElement.dataset.id; 
-            const currentText = messageTextElement.innerHTML;
+            const currentText = escapeHTML(messageTextElement.innerHTML);
 
             button.style.display = 'none';
             const deleteButton = messageElement.querySelector('.delete-message');
@@ -254,6 +254,16 @@ document.addEventListener('DOMContentLoaded',async function () {
         socket.emit('join_room', { room: room, recipient_id: recipientId });
     });
 
+    function escapeHTML(input) {
+        return input
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+    
+
     socket.on('receive_message', async function (data) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message-item');
@@ -265,24 +275,25 @@ document.addEventListener('DOMContentLoaded',async function () {
             }
         });
     
-        const clickableContent = await createClickableLinks(data.content);
-    
-        const messageContent = `
-            <span class="message-text">${clickableContent}</span>
-            ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
-            <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
-            <span class="message-reaction" id="reaction-${data.id}">
-                <!-- Реакция будет отображаться здесь -->
-            </span>
-            <div class="reactions" id="reactions-${data.id}" style="display: none;">
-                <button class="reaction" data-message-id="${data.id}" data-reaction="like">👍</button>
-                <button class="reaction" data-message-id="${data.id}" data-reaction="dislike">👎</button>
-                <button class="reaction" data-message-id="${data.id}" data-reaction="heart">❤️</button>
-                <button class="reaction" data-message-id="${data.id}" data-reaction="smile">😊</button>
-                <button class="reaction" data-message-id="${data.id}" data-reaction="sad">😢</button>
-                <button class="close-reactions" data-message-id="${data.id}">❌</button>
-            </div>
-        `;
+    const safeContent = escapeHTML(data.content);
+    const clickableContent = await createClickableLinks(safeContent);
+
+    const messageContent = `
+        <span class="message-text">${clickableContent}</span>
+        ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
+        <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
+        <span class="message-reaction" id="reaction-${data.id}">
+            <!-- Реакция будет отображаться здесь -->
+        </span>
+        <div class="reactions" id="reactions-${data.id}" style="display: none;">
+            <button class="reaction" data-message-id="${data.id}" data-reaction="like">👍</button>
+            <button class="reaction" data-message-id="${data.id}" data-reaction="dislike">👎</button>
+            <button class="reaction" data-message-id="${data.id}" data-reaction="heart">❤️</button>
+            <button class="reaction" data-message-id="${data.id}" data-reaction="smile">😊</button>
+            <button class="reaction" data-message-id="${data.id}" data-reaction="sad">😢</button>
+            <button class="close-reactions" data-message-id="${data.id}">❌</button>
+        </div>
+    `;
     
         if (String(data.sender) === String(sender)) {
             messageElement.classList.add('sent');
@@ -307,8 +318,7 @@ document.addEventListener('DOMContentLoaded',async function () {
                     editableText.focus();
                     return;
                 }
-    
-                messageTextElement.innerHTML = newContent;
+                messageTextElement.innerHTML = escapeHTML(newContent);
                 
 
             const messageWrapper = messageTextElement.parentNode;

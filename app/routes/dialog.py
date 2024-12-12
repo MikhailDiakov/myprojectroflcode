@@ -10,7 +10,7 @@ from PIL import Image
 import os
 from werkzeug.utils import secure_filename
 from instance.config import Config
-
+from html import escape
 
 user_last_activity = {}
 
@@ -243,11 +243,13 @@ def handle_edit_message(data):
         message.edited = True
         db.session.commit()
 
+        escaped_content = escape(new_content)
+
         room = f"chat_{min(message.sender_id, message.recipient_id)}_{max(message.sender_id, message.recipient_id)}"
         
         emit('update_message', {
             'id': message_id,
-            'content': new_content,
+            'content': escaped_content,
             'edited': True
         }, room=room)
 
