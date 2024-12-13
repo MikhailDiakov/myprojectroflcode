@@ -75,6 +75,16 @@ document.addEventListener('DOMContentLoaded',async function () {
                 editableText.focus();
             }, 100);
 
+            editableText.addEventListener('paste', function (event) {
+                event.preventDefault();
+                const text = (event.clipboardData || window.clipboardData).getData('text');
+                document.execCommand('insertText', false, text); 
+            });
+
+            editableText.addEventListener('drop', function (event) {
+                event.preventDefault(); 
+            });
+
             const saveButton = document.createElement('button');
             saveButton.innerText = 'Save';
             saveButton.classList.add('save-message');
