@@ -308,11 +308,12 @@ document.addEventListener('DOMContentLoaded',async function () {
         if (String(data.sender) === String(sender)) {
             messageElement.classList.add('sent');
             const isLink = /https?:\/\/[^\s]+/.test(data.content);
+            const hasPhoto = !!data.photo_url;
 
             messageElement.innerHTML = `
                 <strong>You:</strong> ${messageContent}
                 <span class="read-status">${data.read ? 'Read' : ''}</span>
-                <button class="edit-message" data-message-id="${data.id}" style="display: ${isLink ? 'none' : 'inline'};">🖍️</button>
+                <button class="edit-message" data-message-id="${data.id}" style="display: ${isLink || hasPhoto ? 'none' : 'inline'};">🖍️</button>
                 <button class="delete-message" data-message-id="${data.id}">🗑️</button>
             `;
             
