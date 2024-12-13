@@ -33,7 +33,7 @@ Dialogs
                     {% else %}
                         {{ '' }}
                     {% endif %}
-                    {% if last_messages[user.id].content and last_messages[user.id].content != '' %}
+                    {% if last_messages[user.id].content and last_messages[user.id].content != ' ' %}
                         {{ last_messages[user.id].content }}
                     {% else %}
                         <em>Photo</em>
@@ -95,11 +95,12 @@ socket.on('update_last_message', function (data) {
     const dialogList = document.querySelector('.dialog-list');
     let dialogItem = document.querySelector(`#dialog-user-${data.sender_id}`);
 
-    const lastMessageContent = data.content 
-        ? data.content 
-        : data.photo_url 
-        ? 'Photo' 
-        : 'No messages yet';
+    const lastMessageContent = data.photo_url 
+    ? 'Photo' 
+    : data.content && data.content.trim() !== '' 
+    ? data.content 
+    : 'No messages yet';
+
 
     if (!dialogItem) {
         dialogItem = document.createElement('li');
