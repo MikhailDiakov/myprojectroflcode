@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 from datetime import datetime
 from ..models import Article, db, Like, Comment
+import html
 
 article_bp = Blueprint('articles', __name__, url_prefix='/articles')
 
@@ -119,8 +120,6 @@ def like_article_ajax(article_id):
     print(likes_count, dislikes_count)
 
     return jsonify({'likes': likes_count, 'dislikes': dislikes_count})
-
-import html
 
 @article_bp.route('/<int:article_id>/comment', methods=['POST'])
 def add_comment_ajax(article_id):

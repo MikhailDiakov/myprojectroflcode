@@ -436,46 +436,71 @@ document.addEventListener('DOMContentLoaded',async function () {
             }
         });
     });
-    socket.on('update_message', function (data) {
+    socket.on('update_message', async function (data) {
         const messageElement = document.querySelector(`[data-id="${data.id}"]`);
-        
+        if (!messageElement) return;
+    
         if (data.deleted) {
             const messageTextElement = messageElement.querySelector('.message-text');
-            messageTextElement.innerHTML = "DELETED MESSAGE";
+            if (messageTextElement) {
+                messageTextElement.innerHTML = "DELETED MESSAGE";
+            }
             messageElement.classList.add('deleted');
-            
-
+    
             const messagePhotoElement = messageElement.querySelector('.message-photo');
             if (messagePhotoElement) {
                 messagePhotoElement.remove();
             }
+    
+            return; 
         }
-        
+    
         if (data.edited) {
             const messageTextElement = messageElement.querySelector('.message-text');
-            messageTextElement.innerHTML = data.content;
-        
-            let editedLabel = messageElement.querySelector('.edited-label');
-            if (!editedLabel) {
-                editedLabel = document.createElement('span');
-                editedLabel.classList.add('edited-label');
-                editedLabel.style.color = 'gray';
-                editedLabel.style.marginLeft = '10px';
-                editedLabel.textContent = '(Edited)';
-                messageTextElement.parentNode.appendChild(editedLabel); 
-            } else {
-                editedLabel.style.display = 'inline'; 
+            if (messageTextElement) {
+                const safeContent = data.content;
+                const updatedContent = await createClickableLinks(safeContent);
+    
+                messageTextElement.innerHTML = updatedContent;
+    
+                let editedLabel = messageElement.querySelector('.edited-label');
+                if (!editedLabel) {
+                    editedLabel = document.createElement('span');
+                    editedLabel.classList.add('edited-label');
+                    editedLabel.style.color = 'gray';
+                    editedLabel.style.marginLeft = '10px';
+                    editedLabel.textContent = '(Edited)';
+                    messageTextElement.parentNode.appendChild(editedLabel); 
+                } else {
+                    editedLabel.style.display = 'inline'; 
+                }
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                if (urlRegex.test(safeContent)) {
+                    const editButton = messageElement.querySelector('.edit-message');
+                    const deleteButton = messageElement.querySelector('.delete-message');
+                    if (editButton) editButton.style.display = 'none';
+                    if (deleteButton) deleteButton.style.display = 'inline';
+                } else {
+                    const editButton = messageElement.querySelector('.edit-message');
+                    const deleteButton = messageElement.querySelector('.delete-message');
+                    if (editButton) editButton.style.display = 'inline';
+                    if (deleteButton) deleteButton.style.display = 'inline';
+                }
             }
         }
     
         if (data.photo_url) {
-            const messagePhotoElement = messageElement.querySelector('.message-photo img');
-            if (messagePhotoElement) {
-                messagePhotoElement.src = data.photo_url;
+            let messagePhotoElement = messageElement.querySelector('.message-photo img');
+            if (!messagePhotoElement) {
+                const photoContainer = document.createElement('div');
+                photoContainer.classList.add('message-photo');
+                messagePhotoElement = document.createElement('img');
+                photoContainer.appendChild(messagePhotoElement);
+                messageElement.appendChild(photoContainer);
             }
+            messagePhotoElement.src = data.photo_url;
         }
     });
-    
     
     
     
