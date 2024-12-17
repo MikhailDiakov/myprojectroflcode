@@ -17,6 +17,19 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
     
+class BlockedUser(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    blocker_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    blocked_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    blocker = db.relationship('User', foreign_keys=[blocker_id], backref='blocked_users')
+    blocked = db.relationship('User', foreign_keys=[blocked_id], backref='blocked_by')
+
+    blocked_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def __repr__(self):
+        return f'<BlockedUser blocker_id={self.blocker_id} blocked_id={self.blocked_id}>'
+    
 class LoginAttempt(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ip_address = db.Column(db.String(45), nullable=False)

@@ -17,30 +17,30 @@ Chat with {{ recipient.username }}
 
         <span class="message-content">
             {% if message.content %}
-                <span class="message-text">
-                    {{ message.content }}
-                    {% if message.edited and message.deleted != 1 %}
-                        <span class="edited-label">(Edited)</span>
-                    {% endif %}
-                </span>
+            <span class="message-text">
+                {{ message.content }}
+                {% if message.edited and message.deleted != 1 %}
+                <span class="edited-label">(Edited)</span>
+                {% endif %}
+            </span>
             {% endif %}
 
             {% if message.photo_url %}
             <div class="message-photo">
                 <img src="{{ url_for('static', filename=message.photo_url.split('static/', 1)[-1]) }}"
-                     alt="Message photo" class="photo" />
+                    alt="Message photo" class="photo" />
             </div>
             {% endif %}
         </span>
 
         <span class="message-reaction" id="reaction-{{ message.id }}">
             {% for reaction in reactions %}
-                {% if reaction.message_id == message.id %}
-                    <span>{{ get_reaction_symbol(reaction.reaction_type) }}</span>
-                {% endif %}
+            {% if reaction.message_id == message.id %}
+            <span>{{ get_reaction_symbol(reaction.reaction_type) }}</span>
+            {% endif %}
             {% endfor %}
         </span>
-        
+
         <div class="reactions" id="reactions-{{ message.id }}" style="display: none;">
             <button class="reaction" data-message-id="{{ message.id }}" data-reaction="like">👍</button>
             <button class="reaction" data-message-id="{{ message.id }}" data-reaction="dislike">👎</button>
@@ -53,14 +53,16 @@ Chat with {{ recipient.username }}
         <span class="message-time" style="right: 0; bottom: 0; position: absolute;">
             {{ message.timestamp.strftime('%H:%M %d/%m') }}
         </span>
-        
+
         {% if message.sender_id == session['user_id'] %}
         <span class="read-status">{{ 'Read' if message.read else '' }}</span>
-        
+
         {% if not message.deleted %}
-        {% set is_link = message.content is string and (message.content.startswith('http://') or message.content.startswith('https://') or 'www.' in message.content) %}
+        {% set is_link = message.content is string and (message.content.startswith('http://') or
+        message.content.startswith('https://') or 'www.' in message.content) %}
         {% set has_photo = message.photo_url is not none and message.photo_url != '' %}
-        <button class="edit-message {% if is_link or has_photo %}hidden{% else %}visible{% endif %}" data-message-id="{{ message.id }}">🖍️</button>        
+        <button class="edit-message {% if is_link or has_photo %}hidden{% else %}visible{% endif %}"
+            data-message-id="{{ message.id }}">🖍️</button>
         <button class="delete-message" data-message-id="{{ message.id }}">🗑️</button>
         {% endif %}
         {% endif %}
@@ -70,14 +72,15 @@ Chat with {{ recipient.username }}
 
 
 <div id="typing-indicator-container"></div>
-
+<div id="block-message"></div>
 <form id="message-form" class="message-form">
-    <textarea id="message-input" name="content" class="message-input" placeholder="Type a message..." required></textarea>
-    
+    <textarea id="message-input" name="content" class="message-input" placeholder="Type a message..."
+        required></textarea>
+
     <div class="button-container">
         <button id="emoji-button" type="button" class="chat-button">😊</button>
         <button id="photo-button" type="button" class="chat-button">📷</button>
-        <button type="submit" class="btn btn-primary">Send</button>
+        <button id="send-message-button" type="submit" class="btn btn-primary">Send</button>
     </div>
 </form>
 
@@ -102,7 +105,7 @@ Chat with {{ recipient.username }}
         Choose a photo
         <input type="file" id="photo-upload" accept="image/*" />
     </label>
-    
+
     <p id="file-name">No file selected</p>
     <button id="send-photo" type="button">Send Photo</button>
 </div>

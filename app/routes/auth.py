@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, make_response
+from flask import Blueprint, render_template, request, redirect, url_for, session, make_response, flash
 from werkzeug.utils import secure_filename
 import os
-from ..models import User, db, Article, LoginAttempt, AvatarChangeHistory, Message
+from ..models import User, db, Article, LoginAttempt, AvatarChangeHistory, Message, BlockedUser
 import re
 from .. import socketio
 from flask_socketio import emit
@@ -133,6 +133,39 @@ def logout():
     resp.delete_cookie('auth_token')
     return resp
 
+@auth_bp.route('/block_user/<username>', methods=['POST'])
+def block_user(username):
+    user_id = session.get('user_id')
+    user_to_block = User.query.filter_by(username=username).first_or_404()
+
+    existing_block = BlockedUser.query.filter_by(blocker_id=user_id, blocked_id=user_to_block.id).first()
+    
+    if not existing_block:
+        new_block = BlockedUser(blocker_id=user_id, blocked_id=user_to_block.id)
+        db.session.add(new_block)
+        db.session.commit()
+        flash(f'User {username} has been blocked.', 'success')
+    else:
+        flash(f'User {username} is already blocked.', 'info')
+
+    return redirect(url_for('auth.user_profile', username=username))
+
+@auth_bp.route('/unblock_user/<username>', methods=['POST'])
+def unblock_user(username):
+    user_id = session.get('user_id')
+    user_to_unblock = User.query.filter_by(username=username).first_or_404()
+
+    block_entry = BlockedUser.query.filter_by(blocker_id=user_id, blocked_id=user_to_unblock.id).first()
+
+    if block_entry:
+        db.session.delete(block_entry)
+        db.session.commit()
+        flash(f'User {username} has been unblocked.', 'success')
+    else:
+        flash(f'User {username} is not in your block list.', 'info')
+
+    return redirect(url_for('auth.user_profile', username=username))
+
 @auth_bp.route('/change_email', methods=['POST'])
 def change_email():
     new_email = request.form.get('new_email')
@@ -217,12 +250,14 @@ def user_profile(username):
 
     articles = articles_query.order_by(Article.date_posted.desc()).paginate(page=page, per_page=10)
 
+    blocked_user_exists = BlockedUser.query.filter_by(blocker_id=session.get('user_id'), blocked_id=user.id).first() is not None
+
     avatar_url = user.avatar_url
     return render_template(
         'auth/profile.html',
         user=user,
         articles=articles,
-        avatar_url=avatar_url,query=query
+        avatar_url=avatar_url,query=query, blocked_user_exists=blocked_user_exists
     )
 
 

@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session,jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 from flask_socketio import join_room, emit, leave_room
-from ..models import User, Message, db, Reaction
+from ..models import User, Message, db, Reaction, BlockedUser
 from datetime import datetime
 from .. import socketio
 from collections import defaultdict
@@ -99,6 +99,17 @@ def handle_join_room(data):
     if user_id and room:
         active_users[user_id].add(request.sid)
         join_room(room)
+
+        block_check_sender = BlockedUser.query.filter_by(blocker_id=recipient_id, blocked_id=user_id).first()
+        block_check_recipient = BlockedUser.query.filter_by(blocker_id=user_id, blocked_id=recipient_id).first()
+
+        if block_check_sender:
+            emit('block_notification', {'message': 'You are blocked by this user'}, room=room)
+            return
+
+        if block_check_recipient:
+            emit('block_notification', {'message': 'You have blocked this user'}, room=room)
+            return
 
         if recipient_id:
             Message.query.filter_by(sender_id=recipient_id, recipient_id=user_id, read=False) \

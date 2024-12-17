@@ -20,6 +20,24 @@ document.addEventListener('DOMContentLoaded', async function () {
         return;
     }
 
+    socket.on('block_notification', function (data) {
+        console.log(data.message)
+        document.getElementById('message-input').style.display = 'none';
+        document.getElementById('emoji-button').style.display = 'none';
+        document.getElementById('photo-button').style.display = 'none';
+        document.getElementById('send-message-button').style.display = 'none';
+
+        const editButtons = document.querySelectorAll('.edit-message');
+        editButtons.forEach(function (button) {
+            button.style.display = 'none';
+        });
+
+        const messageBox = document.getElementById('block-message');
+        messageBox.textContent = data.message;
+        messageBox.style.display = 'block';
+    });
+
+
     const editButtons = document.querySelectorAll('.edit-message');
     const deleteButtons = document.querySelectorAll('.delete-message');
 
@@ -116,23 +134,17 @@ document.addEventListener('DOMContentLoaded', async function () {
                         editedLabel.style.marginLeft = '10px';
                         editedLabel.textContent = '(Edited)';
                         messageWrapper.appendChild(editedLabel);
-                        socket.emit('edit_message', {
-                            message_id: messageId,
-                            content: newContent
-                        });
                     } else {
                         console.log('Edited label already exists.');
                     }
                 } else {
                     console.error('Parent node for message text not found!');
-
-                    socket.emit('edit_message', {
-                        message_id: messageId,
-                        content: newContent
-                    });
-
                     messageTextElement.innerHTML = newContent;
                 }
+                socket.emit('edit_message', {
+                    message_id: messageId,
+                    content: newContent
+                });
 
                 saveButton.remove();
                 button.style.display = 'inline';

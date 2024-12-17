@@ -17,15 +17,31 @@
 
         <p id="user-status" style="font-size: 16px; text-align: center; font-weight: bold;">
             {% if user.is_online %}
-                <span style="color: green;">Online</span>
+            <span style="color: green;">Online</span>
             {% else %}
-                <span style="color: red;">Offline</span>
+            <span style="color: red;">Offline</span>
             {% endif %}
         </p>
 
         {% if session.get('user_id') != user.id %}
         <a href="{{ url_for('dialog.dialog', username=user.username) }}" class="btn btn-primary"
             style="margin: 0 auto; display: block; width: 200px; height: 40px;">Start a conversation</a>
+
+        {% if blocked_user_exists %}
+        <form action="{{ url_for('auth.unblock_user', username=user.username) }}" method="POST">
+            <button type="submit" class="btn btn-primary"
+                style="margin: 10px auto; display: block; width: 100px; height: 40px;">
+                Unblock
+            </button>
+        </form>
+        {% else %}
+        <form action="{{ url_for('auth.block_user', username=user.username) }}" method="POST">
+            <button type="submit" class="btn btn-primary"
+                style="margin: 10px auto; display: block; width: 100px; height: 40px;">
+                Block
+            </button>
+        </form>
+        {% endif %}
         {% endif %}
     </div>
 
@@ -35,7 +51,8 @@
             <form method="get" action="{{ url_for('auth.user_profile', username=user.username) }}">
                 <input type="text" name="query" value="{{ query }}" class="form-control"
                     style="width:500px; height:40px; margin: 0 auto;" placeholder="Search articles by title">
-                <button type="submit" class="btn btn-primary mt-2" style="margin: 0 auto; display: block;">Search</button>
+                <button type="submit" class="btn btn-primary mt-2"
+                    style="margin: 0 auto; display: block;">Search</button>
             </form>
         </div>
         {% if articles.items %}
@@ -69,28 +86,28 @@
     </div>
 </div>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const socket = io();
-    const userId = document.getElementById('user-profile').dataset.userId;
-    let statusTimeout = null; 
+    document.addEventListener('DOMContentLoaded', function () {
+        const socket = io();
+        const userId = document.getElementById('user-profile').dataset.userId;
+        let statusTimeout = null;
 
-    socket.on('status_update', function (data) {
-        if (data.user_id == userId) {  
-            const statusElement = document.getElementById('user-status');
-            
-            if (statusTimeout) {
-                clearTimeout(statusTimeout);
-            }
+        socket.on('status_update', function (data) {
+            if (data.user_id == userId) {
+                const statusElement = document.getElementById('user-status');
 
-            statusTimeout = setTimeout(function () {
-                if (data.status === 'online') {
-                    statusElement.innerHTML = '<span style="color: green;">Online</span>';
-                } else if (data.status === 'offline') {
-                    statusElement.innerHTML = '<span style="color: red;">Offline</span>';
+                if (statusTimeout) {
+                    clearTimeout(statusTimeout);
                 }
-            }, 2000);  
-        }
+
+                statusTimeout = setTimeout(function () {
+                    if (data.status === 'online') {
+                        statusElement.innerHTML = '<span style="color: green;">Online</span>';
+                    } else if (data.status === 'offline') {
+                        statusElement.innerHTML = '<span style="color: red;">Offline</span>';
+                    }
+                }, 2000);
+            }
+        });
     });
-});
 </script>
 {% endblock %}
