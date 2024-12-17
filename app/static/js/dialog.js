@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded',async function () {
+document.addEventListener('DOMContentLoaded', async function () {
     const socket = io();
 
     const room = document.getElementById('messages').dataset.room;
@@ -7,14 +7,14 @@ document.addEventListener('DOMContentLoaded',async function () {
 
     const messagesContainer = document.getElementById('messages');
     const messageInput = document.getElementById('message-input');
-    
+
 
     function scrollToBottom() {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
     setTimeout(scrollToBottom, 100);
-    
+
     if (performance.getEntriesByType('navigation')[0].type === 'reload') {
         window.location.href = '/dialog';
         return;
@@ -25,20 +25,20 @@ document.addEventListener('DOMContentLoaded',async function () {
 
     deleteButtons.forEach(button => {
         button.addEventListener('click', function () {
-        const messageElement = button.closest('.message-item');
-        const messageTextElement = messageElement.querySelector('.message-text');
-        const messagePhotoElement = messageElement.querySelector('.message-photo');
-        const messageId = messageElement.dataset.id;
+            const messageElement = button.closest('.message-item');
+            const messageTextElement = messageElement.querySelector('.message-text');
+            const messagePhotoElement = messageElement.querySelector('.message-photo');
+            const messageId = messageElement.dataset.id;
 
-        if (confirm("Are you sure you want to delete this message?")) {
-            if (messageTextElement) {
-                messageTextElement.innerHTML = "MESSAGE DELETED";
-            }
-            if (messagePhotoElement) {
-                messagePhotoElement.innerHTML = ""; 
-            }
+            if (confirm("Are you sure you want to delete this message?")) {
+                if (messageTextElement) {
+                    messageTextElement.innerHTML = "MESSAGE DELETED";
+                }
+                if (messagePhotoElement) {
+                    messagePhotoElement.innerHTML = "";
+                }
 
-            messageElement.classList.add('deleted');
+                messageElement.classList.add('deleted');
 
                 const editButton = messageElement.querySelector('.edit-message');
                 const deleteButton = messageElement.querySelector('.delete-message');
@@ -56,20 +56,26 @@ document.addEventListener('DOMContentLoaded',async function () {
     editButtons.forEach(button => {
         button.addEventListener('click', function () {
             const messageElement = button.closest('.message-item');
+            const editedLabel = messageElement.querySelector('.edited-label');
+            if (editedLabel) {
+                editedLabel.remove();
+            }
             const messageTextElement = messageElement.querySelector('.message-text');
-            const messageId = messageElement.dataset.id; 
+            const messageId = messageElement.dataset.id;
             const currentText = escapeHTML(messageTextElement.innerHTML);
 
             button.style.display = 'none';
             const deleteButton = messageElement.querySelector('.delete-message');
             deleteButton.style.display = 'none';
 
+            const existingEditableText = messageTextElement.querySelector('.edit-text');
+            if (existingEditableText) {
+                existingEditableText.remove();
+            }
+
             messageTextElement.innerHTML = `<div contenteditable="true" class="edit-text" style="width: 100%; min-height: 50px;">${currentText}</div>`;
             const editableText = messageTextElement.querySelector('.edit-text');
-            const editedLabel = messageElement.querySelector('.edited-label');
-            if (editedLabel) {
-                editedLabel.remove();
-            }
+
             setTimeout(scrollToBottom, 100);
             setTimeout(() => {
                 editableText.focus();
@@ -78,11 +84,11 @@ document.addEventListener('DOMContentLoaded',async function () {
             editableText.addEventListener('paste', function (event) {
                 event.preventDefault();
                 const text = (event.clipboardData || window.clipboardData).getData('text');
-                document.execCommand('insertText', false, text); 
+                document.execCommand('insertText', false, text);
             });
 
             editableText.addEventListener('drop', function (event) {
-                event.preventDefault(); 
+                event.preventDefault();
             });
 
             const saveButton = document.createElement('button');
@@ -98,18 +104,27 @@ document.addEventListener('DOMContentLoaded',async function () {
                     editableText.focus();
                     return;
                 }
+                messageTextElement.innerHTML = escapeHTML(newContent);
 
-
-                if (newContent !== currentText) {  
-                    let editedLabel = messageTextElement.querySelector('.edited-label');
+                const messageWrapper = messageTextElement.parentNode;
+                if (messageWrapper) {
+                    let editedLabel = messageWrapper.querySelector('.edited-label');
                     if (!editedLabel) {
                         editedLabel = document.createElement('span');
                         editedLabel.classList.add('edited-label');
                         editedLabel.style.color = 'gray';
                         editedLabel.style.marginLeft = '10px';
                         editedLabel.textContent = '(Edited)';
-                        messageTextElement.appendChild(editedLabel);
+                        messageWrapper.appendChild(editedLabel);
+                        socket.emit('edit_message', {
+                            message_id: messageId,
+                            content: newContent
+                        });
+                    } else {
+                        console.log('Edited label already exists.');
                     }
+                } else {
+                    console.error('Parent node for message text not found!');
 
                     socket.emit('edit_message', {
                         message_id: messageId,
@@ -132,7 +147,7 @@ document.addEventListener('DOMContentLoaded',async function () {
             });
         });
     });
-    
+
     async function processMessages() {
         const messageItems = messagesContainer.querySelectorAll('.message-item');
         for (const messageItem of messageItems) {
@@ -143,33 +158,33 @@ document.addEventListener('DOMContentLoaded',async function () {
             }
         }
     }
-    
-    
+
+
     async function createClickableLinks(text) {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         const matches = text.match(urlRegex);
-    
+
         if (!matches) return text;
-    
+
         let updatedText = text;
-    
+
         for (const url of matches) {
             const linkPreviewHTML = await getLinkPreview(url);
             if (linkPreviewHTML) {
                 updatedText = updatedText.replace(url, linkPreviewHTML);
             }
         }
-    
+
         return updatedText;
     }
-    
+
     function truncateText(text, maxLength) {
         if (text.length > maxLength) {
             return text.slice(0, maxLength) + '...';
         }
         return text;
     }
-    
+
     const cache = JSON.parse(localStorage.getItem('linkPreviewCache')) || {};
 
     async function getLinkPreview(url) {
@@ -177,19 +192,19 @@ document.addEventListener('DOMContentLoaded',async function () {
             const sizeInBytes = new Blob([JSON.stringify(cache[url])]).size;
             return cache[url];
         }
-    
+
         const apiUrl = `https://api.linkpreview.net/?key=${apiKey}&q=${encodeURIComponent(url)}`;
-    
+
         try {
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error('Request failed');
-            
+
             const data = await response.json();
-    
+
             if (data.error || !data.title || !data.description || !data.image) {
                 return `<a href="${url}" target="_blank" class="message-link">${url}</a>`;
             }
-    
+
             const previewHTML = `
                 <div class="link-preview">
                     <a href="${data.url}" target="_blank" class="link-preview-container">
@@ -201,17 +216,17 @@ document.addEventListener('DOMContentLoaded',async function () {
                     </a>
                 </div>
             `;
-    
+
             cache[url] = previewHTML;
             localStorage.setItem('linkPreviewCache', JSON.stringify(cache));
-    
+
             return previewHTML;
         } catch (error) {
             return `<a href="${url}" target="_blank" class="message-link">${url}</a>`;
         }
-    }    
-    
-    
+    }
+
+
     const style = document.createElement('style');
     style.textContent = `
     .link-preview {
@@ -256,7 +271,7 @@ document.addEventListener('DOMContentLoaded',async function () {
     async function main() {
         await processMessages();
         setTimeout(scrollToBottom, 100);
-      }
+    }
 
     main()
 
@@ -272,23 +287,23 @@ document.addEventListener('DOMContentLoaded',async function () {
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
     }
-    
+
 
     socket.on('receive_message', async function (data) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message-item');
         messageElement.setAttribute('data-id', data.id);
-    
+
         messageElement.addEventListener('mousedown', function (event) {
             if (event.detail === 2) {
                 event.preventDefault();
             }
         });
-    
-    const safeContent = escapeHTML(data.content);
-    const clickableContent = await createClickableLinks(safeContent);
 
-    const messageContent = `
+        const safeContent = escapeHTML(data.content);
+        const clickableContent = await createClickableLinks(safeContent);
+
+        const messageContent = `
         <span class="message-text">${clickableContent}</span>
         ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
         <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
@@ -304,7 +319,7 @@ document.addEventListener('DOMContentLoaded',async function () {
             <button class="close-reactions" data-message-id="${data.id}">❌</button>
         </div>
     `;
-    
+
         if (String(data.sender) === String(sender)) {
             messageElement.classList.add('sent');
             const isLink = /https?:\/\/[^\s]+/.test(data.content);
@@ -316,12 +331,12 @@ document.addEventListener('DOMContentLoaded',async function () {
                 <button class="edit-message" data-message-id="${data.id}" style="display: ${isLink || hasPhoto ? 'none' : 'inline'};">🖍️</button>
                 <button class="delete-message" data-message-id="${data.id}">🗑️</button>
             `;
-            
-    
+
+
             const editButton = messageElement.querySelector('.edit-message');
             const deleteButton = messageElement.querySelector('.delete-message');
             const messageTextElement = messageElement.querySelector('.message-text');
-    
+
             const saveMessage = function (newContent) {
                 data.content = newContent;
                 if (newContent === "") {
@@ -330,60 +345,60 @@ document.addEventListener('DOMContentLoaded',async function () {
                     return;
                 }
                 messageTextElement.innerHTML = escapeHTML(newContent);
-                
 
-            const messageWrapper = messageTextElement.parentNode;
-            if (messageWrapper) {
-                let editedLabel = messageWrapper.querySelector('.edited-label');
-                if (!editedLabel) {
-                    editedLabel = document.createElement('span');
-                    editedLabel.classList.add('edited-label');
-                    editedLabel.style.color = 'gray';
-                    editedLabel.style.marginLeft = '10px';
-                    editedLabel.textContent = '(Edited)';
-                    messageWrapper.appendChild(editedLabel);
+
+                const messageWrapper = messageTextElement.parentNode;
+                if (messageWrapper) {
+                    let editedLabel = messageWrapper.querySelector('.edited-label');
+                    if (!editedLabel) {
+                        editedLabel = document.createElement('span');
+                        editedLabel.classList.add('edited-label');
+                        editedLabel.style.color = 'gray';
+                        editedLabel.style.marginLeft = '10px';
+                        editedLabel.textContent = '(Edited)';
+                        messageWrapper.appendChild(editedLabel);
+                    } else {
+                        console.log('Edited label already exists.');
+                    }
                 } else {
-                    console.log('Edited label already exists.');
+                    console.error('Parent node for message text not found!');
                 }
-            } else {
-                console.error('Parent node for message text not found!');
-            }
 
                 editButton.innerHTML = '🖍️';
                 editButton.style.display = 'inline';
                 deleteButton.style.display = 'inline';
-    
+
                 editButton.removeEventListener('click', saveHandler);
                 editButton.addEventListener('click', editHandler);
-    
+
                 socket.emit('edit_message', {
                     message_id: data.id,
                     content: newContent
                 });
             };
-    
+
             const editHandler = function () {
                 const currentText = messageTextElement.innerHTML;
-    
+
                 editButton.style.display = 'none';
                 deleteButton.style.display = 'none';
-    
+
                 messageTextElement.innerHTML = `<div contenteditable="true" class="edit-text" style="width: 50%; height: 50px; overflow-y: auto;">${currentText}</div>`;
                 const editableText = messageTextElement.querySelector('.edit-text');
                 editableText.focus();
-    
+
                 editButton.innerHTML = 'Save';
                 editButton.style.display = 'inline';
-    
+
                 editButton.removeEventListener('click', editHandler);
                 editButton.addEventListener('click', saveHandler);
-                
+
 
                 setTimeout(scrollToBottom, 100);
                 setTimeout(() => {
                     editableText.focus();
                 }, 100);
-    
+
                 editableText.addEventListener('keydown', function (event) {
                     if (event.key === 'Enter') {
                         event.preventDefault();
@@ -391,14 +406,14 @@ document.addEventListener('DOMContentLoaded',async function () {
                     }
                 });
             };
-    
+
             const saveHandler = function () {
                 const editableText = messageTextElement.querySelector('.edit-text');
                 saveMessage(editableText.textContent);
             };
-    
+
             editButton.addEventListener('click', editHandler);
-    
+
             deleteButton.addEventListener('click', function () {
                 if (confirm("Are you sure you want to delete this message?")) {
                     messageTextElement.innerHTML = "DELETED MESSAGE";
@@ -408,22 +423,22 @@ document.addEventListener('DOMContentLoaded',async function () {
                     if (editedLabel) {
                         editedLabel.remove();
                     }
-    
+
                     editButton.style.display = 'none';
                     deleteButton.style.display = 'none';
-    
+
                     socket.emit('delete_message', {
                         message_id: data.id
                     });
                 }
             });
-    
+
         } else {
             messageElement.classList.add('received');
             messageElement.innerHTML = `
                 <strong>${data.sender_username}:</strong> ${messageContent}
             `;
-    
+
             socket.emit('mark_as_read', {
                 message_id: data.id,
                 sender_id: data.sender,
@@ -432,12 +447,12 @@ document.addEventListener('DOMContentLoaded',async function () {
 
         messagesContainer.appendChild(messageElement);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    
+
         const currentUserId = document.getElementById('messages').dataset.sender;
-    
+
         messageElement.addEventListener('dblclick', function () {
             const reactionContainer = document.getElementById(`reaction-${data.id}`);
-    
+
             if (String(data.sender) !== String(currentUserId)) {
                 if (reactionContainer && reactionContainer.textContent.trim() !== '') {
                     removeReaction(data.id);
@@ -450,30 +465,32 @@ document.addEventListener('DOMContentLoaded',async function () {
     socket.on('update_message', async function (data) {
         const messageElement = document.querySelector(`[data-id="${data.id}"]`);
         if (!messageElement) return;
-    
+
         if (data.deleted) {
             const messageTextElement = messageElement.querySelector('.message-text');
             if (messageTextElement) {
                 messageTextElement.innerHTML = "DELETED MESSAGE";
             }
             messageElement.classList.add('deleted');
-    
+
             const messagePhotoElement = messageElement.querySelector('.message-photo');
             if (messagePhotoElement) {
                 messagePhotoElement.remove();
             }
-    
-            return; 
+
+            return;
         }
-    
+
         if (data.edited) {
             const messageTextElement = messageElement.querySelector('.message-text');
             if (messageTextElement) {
                 const safeContent = data.content;
                 const updatedContent = await createClickableLinks(safeContent);
-    
+                console.log(safeContent)
+                console.log(updatedContent)
+
                 messageTextElement.innerHTML = updatedContent;
-    
+
                 let editedLabel = messageElement.querySelector('.edited-label');
                 if (!editedLabel) {
                     editedLabel = document.createElement('span');
@@ -481,9 +498,9 @@ document.addEventListener('DOMContentLoaded',async function () {
                     editedLabel.style.color = 'gray';
                     editedLabel.style.marginLeft = '10px';
                     editedLabel.textContent = '(Edited)';
-                    messageTextElement.parentNode.appendChild(editedLabel); 
+                    messageTextElement.parentNode.appendChild(editedLabel);
                 } else {
-                    editedLabel.style.display = 'inline'; 
+                    editedLabel.style.display = 'inline';
                 }
                 const urlRegex = /(https?:\/\/[^\s]+)/g;
                 if (urlRegex.test(safeContent)) {
@@ -499,7 +516,7 @@ document.addEventListener('DOMContentLoaded',async function () {
                 }
             }
         }
-    
+
         if (data.photo_url) {
             let messagePhotoElement = messageElement.querySelector('.message-photo img');
             if (!messagePhotoElement) {
@@ -512,22 +529,22 @@ document.addEventListener('DOMContentLoaded',async function () {
             messagePhotoElement.src = data.photo_url;
         }
     });
-    
-    
-    
-document.getElementById('messages').addEventListener('click', function (event) {
-    if (event.target && event.target.classList.contains('reaction')) {
-        const messageId = event.target.getAttribute('data-message-id');
-        const reactionType = event.target.getAttribute('data-reaction');
-        sendReaction(messageId, reactionType);
-        document.getElementById(`reactions-${messageId}`).style.display = 'none';
-    }
 
-    if (event.target && event.target.classList.contains('close-reactions')) {
-        const messageId = event.target.getAttribute('data-message-id');
-        document.getElementById(`reactions-${messageId}`).style.display = 'none'; 
-    }
-});
+
+
+    document.getElementById('messages').addEventListener('click', function (event) {
+        if (event.target && event.target.classList.contains('reaction')) {
+            const messageId = event.target.getAttribute('data-message-id');
+            const reactionType = event.target.getAttribute('data-reaction');
+            sendReaction(messageId, reactionType);
+            document.getElementById(`reactions-${messageId}`).style.display = 'none';
+        }
+
+        if (event.target && event.target.classList.contains('close-reactions')) {
+            const messageId = event.target.getAttribute('data-message-id');
+            document.getElementById(`reactions-${messageId}`).style.display = 'none';
+        }
+    });
 
 
     socket.on('update_message_status', function (data) {
@@ -561,18 +578,18 @@ document.getElementById('messages').addEventListener('click', function (event) {
     });
 
     document.getElementById('message-form').addEventListener('submit', function (event) {
-        event.preventDefault(); 
+        event.preventDefault();
         handleFormSubmit();
     });
-    
+
     messageInput.addEventListener('keypress', function (event) {
         if (event.key === 'Enter') {
             event.preventDefault();
-            document.getElementById('message-form').requestSubmit(); 
+            document.getElementById('message-form').requestSubmit();
         }
     });
-    
-    
+
+
 
     setTimeout(function () {
         messageInput.focus();
@@ -582,15 +599,15 @@ document.getElementById('messages').addEventListener('click', function (event) {
             socket.emit('typing', { room: room });
         }
     });
-    
-    let typingTimeout; 
+
+    let typingTimeout;
 
     socket.on('user_typing', function (data) {
-    
+
         const typingIndicatorContainer = document.getElementById('typing-indicator-container');
         const existingTypingIndicator = document.getElementById('typing-indicator');
-    
-        if (String(data.sender_id) !== String(sender)) { 
+
+        if (String(data.sender_id) !== String(sender)) {
 
             if (!existingTypingIndicator) {
                 const typingElement = document.createElement('div');
@@ -598,93 +615,57 @@ document.getElementById('messages').addEventListener('click', function (event) {
                 typingElement.textContent = `${data.sender_username} is typing...`;
                 typingIndicatorContainer.appendChild(typingElement);
             }
-    
+
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    
+
             if (typingTimeout) {
                 clearTimeout(typingTimeout);
             }
-    
+
             typingTimeout = setTimeout(() => {
                 const typingElement = document.getElementById('typing-indicator');
                 if (typingElement) {
                     typingElement.remove();
-                }   
-                typingTimeout = null; 
+                }
+                typingTimeout = null;
             }, 2000);
         }
     });
-document.getElementById('emoji-button').addEventListener('click', function () {
-    const emojiMenu = document.getElementById('emoji-menu');
-    const photoMenu = document.getElementById('photo-menu');
-    
-    emojiMenu.style.display = emojiMenu.style.display === 'none' || emojiMenu.style.display === '' ? 'block' : 'none';
-    photoMenu.style.display = 'none'; 
-});
+    document.getElementById('emoji-button').addEventListener('click', function () {
+        const emojiMenu = document.getElementById('emoji-menu');
+        const photoMenu = document.getElementById('photo-menu');
 
-document.querySelectorAll('.emoji').forEach(function (button) {
-    button.addEventListener('click', function () {
-        const emoji = button.textContent;
-        messageInput.value += emoji;
-        messageInput.focus() 
+        emojiMenu.style.display = emojiMenu.style.display === 'none' || emojiMenu.style.display === '' ? 'block' : 'none';
+        photoMenu.style.display = 'none';
     });
-});
 
-document.getElementById('close-emoji-menu').addEventListener('click', function () {
-    document.getElementById('emoji-menu').style.display = 'none';  
-    messageInput.focus()
-});
+    document.querySelectorAll('.emoji').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const emoji = button.textContent;
+            messageInput.value += emoji;
+            messageInput.focus()
+        });
+    });
 
-document.getElementById('photo-button').addEventListener('click', function () {
-    const photoMenu = document.getElementById('photo-menu');
-    const emojiMenu = document.getElementById('emoji-menu');
-    
-    photoMenu.style.display = photoMenu.style.display === 'none' || photoMenu.style.display === '' ? 'block' : 'none';
-    emojiMenu.style.display = 'none';  
-});
+    document.getElementById('close-emoji-menu').addEventListener('click', function () {
+        document.getElementById('emoji-menu').style.display = 'none';
+        messageInput.focus()
+    });
 
-document.getElementById('send-photo').addEventListener('click', function () {
-    const photoInput = document.getElementById('photo-upload');
-    const file = photoInput.files[0];
+    document.getElementById('photo-button').addEventListener('click', function () {
+        const photoMenu = document.getElementById('photo-menu');
+        const emojiMenu = document.getElementById('emoji-menu');
 
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const photoDataUrl = e.target.result;  
+        photoMenu.style.display = photoMenu.style.display === 'none' || photoMenu.style.display === '' ? 'block' : 'none';
+        emojiMenu.style.display = 'none';
+    });
 
-            socket.emit('send_message', {
-                room: room,
-                sender: sender,
-                recipient_id: recipientId,
-                content: '',  
-                photo: photoDataUrl,
-            });
-            document.getElementById('photo-menu').style.display = 'none';
-            photoInput.value = '';  
-            document.getElementById('file-name').textContent = 'No file selected'; 
-        };
-        reader.readAsDataURL(file);
-    } else {
-        alert('Please select an image to send.');
-    }
-});
-document.getElementById('photo-upload').addEventListener('change', function() {
-    const fileName = this.files[0] ? this.files[0].name : 'No file selected';
-    document.getElementById('file-name').textContent = fileName;
-});
-document.getElementById('close-photo-menu').addEventListener('click', function() {
-    document.getElementById('photo-menu').style.display = 'none';
-});
-messageInput.addEventListener('paste', function (event) {
-    const clipboardItems = event.clipboardData.items;
+    document.getElementById('send-photo').addEventListener('click', function () {
+        const photoInput = document.getElementById('photo-upload');
+        const file = photoInput.files[0];
 
-    for (let i = 0; i < clipboardItems.length; i++) {
-        const item = clipboardItems[i];
-        
-        if (item.type.startsWith('image/')) {
-            const file = item.getAsFile();
+        if (file) {
             const reader = new FileReader();
-
             reader.onload = function (e) {
                 const photoDataUrl = e.target.result;
 
@@ -692,215 +673,249 @@ messageInput.addEventListener('paste', function (event) {
                     room: room,
                     sender: sender,
                     recipient_id: recipientId,
-                    content: '', 
+                    content: '',
                     photo: photoDataUrl,
                 });
-                setTimeout(scrollToBottom, 100); 
-            };
-
-            reader.readAsDataURL(file);
-            break; 
-        }
-    }
-});
-document.addEventListener('dragenter', (event) => {
-    event.preventDefault();
-    document.body.classList.add('dragging');
-});
-
-document.addEventListener('dragover', (event) => {
-    event.preventDefault();
-});
-
-document.addEventListener('dragleave', (event) => {
-    if (event.target === document || event.target === document.body) {
-        document.body.classList.remove('dragging');
-    }
-});
-
-document.addEventListener('drop', (event) => {
-    event.preventDefault();
-    document.body.classList.remove('dragging'); 
-
-    const files = event.dataTransfer.files;
-
-    if (files.length > 0) {
-        const file = files[0];
-
-        if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-
-            reader.onload = function (e) {
-                const photoDataUrl = e.target.result;
-
-                socket.emit('send_message', {
-                    room: room,
-                    sender: sender,
-                    recipient_id: recipientId,
-                    content: '', 
-                    photo: photoDataUrl,
-                });
-
+                document.getElementById('photo-menu').style.display = 'none';
+                photoInput.value = '';
+                document.getElementById('file-name').textContent = 'No file selected';
                 setTimeout(scrollToBottom, 100);
             };
-
             reader.readAsDataURL(file);
         } else {
-            alert('Please drop an image file!');
+            alert('Please select an image to send.');
         }
-    }
-});
-function toggleReactionMenu(messageId) {
-    const reactionMenu = document.getElementById(`reactions-${messageId}`);
-    const allReactionMenus = document.querySelectorAll('.reactions');
-    const messagesContainer = document.getElementById('messages');
-    const messageElement = document.querySelector(`.message-item[data-id="${messageId}"]`);
+    });
+    document.getElementById('photo-upload').addEventListener('change', function () {
+        const fileName = this.files[0] ? this.files[0].name : 'No file selected';
+        document.getElementById('file-name').textContent = fileName;
+    });
+    document.getElementById('close-photo-menu').addEventListener('click', function () {
+        document.getElementById('photo-menu').style.display = 'none';
+    });
+    messageInput.addEventListener('paste', function (event) {
+        const clipboardItems = event.clipboardData.items;
 
-    const currentUserId = document.getElementById('messages').dataset.sender;
-    const authorId = messageElement.getAttribute('data-author-id'); 
+        for (let i = 0; i < clipboardItems.length; i++) {
+            const item = clipboardItems[i];
 
-    if (authorId === currentUserId) {
-        return; 
-    }
+            if (item.type.startsWith('image/')) {
+                const file = item.getAsFile();
+                const reader = new FileReader();
 
-    allReactionMenus.forEach(function(menu) {
-        if (menu !== reactionMenu) {
-            menu.style.display = 'none';
+                reader.onload = function (e) {
+                    const photoDataUrl = e.target.result;
+
+                    socket.emit('send_message', {
+                        room: room,
+                        sender: sender,
+                        recipient_id: recipientId,
+                        content: '',
+                        photo: photoDataUrl,
+                    });
+                    setTimeout(scrollToBottom, 100);
+                };
+                reader.readAsDataURL(file);
+                break;
+            }
+        }
+    });
+    document.addEventListener('dragenter', (event) => {
+        event.preventDefault();
+        document.body.classList.add('dragging');
+    });
+
+    document.addEventListener('dragover', (event) => {
+        event.preventDefault();
+    });
+
+    document.addEventListener('dragleave', (event) => {
+        if (event.target === document || event.target === document.body) {
+            document.body.classList.remove('dragging');
         }
     });
 
-    if (reactionMenu.style.display === 'none' || reactionMenu.style.display === '') {
-        reactionMenu.style.display = 'block';
-        
-        const rect = reactionMenu.getBoundingClientRect();
-        const containerRect = messagesContainer.getBoundingClientRect();
+    document.addEventListener('drop', (event) => {
+        event.preventDefault();
+        document.body.classList.remove('dragging');
 
-        if (rect.bottom > containerRect.bottom) {
-            messagesContainer.scrollTop += rect.bottom - containerRect.bottom; 
-        }
+        const files = event.dataTransfer.files;
 
-        if (rect.top < containerRect.top) {
-            messagesContainer.scrollTop -= containerRect.top - rect.top; 
-        }
-    } else {
-        reactionMenu.style.display = 'none';
-    }
-}
+        if (files.length > 0) {
+            const file = files[0];
 
-function sendReaction(messageId, reactionType) {
-    const room = document.getElementById('messages').dataset.room;
-    const sender = document.getElementById('messages').dataset.sender;
-    const recipientId = document.getElementById('messages').dataset.recipient;
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
 
-    socket.emit('send_reaction', {
-        room: room,
-        sender: sender,
-        recipient_id: recipientId,
-        message_id: messageId,
-        reaction_type: reactionType,
-    });
+                reader.onload = function (e) {
+                    const photoDataUrl = e.target.result;
 
-    const reactionContainer = document.getElementById(`reaction-${messageId}`);
-    reactionContainer.textContent = getReactionSymbol(reactionType);
-}
-
-function removeReaction(messageId) {
-    const room = document.getElementById('messages').dataset.room;
-    const sender = document.getElementById('messages').dataset.sender;
-    const recipientId = document.getElementById('messages').dataset.recipient;
-    const currentUserId = document.getElementById('messages').dataset.sender;
-
-    const messageElement = document.querySelector(`.message-item[data-id="${messageId}"]`);
-
-    let authorId = null;
-    if (messageElement) {
-        authorId = messageElement.getAttribute('data-author-id');
-    }
-    if (authorId === currentUserId) {
-        return; 
-    }
-
-
-    socket.emit('remove_reaction', {
-        room: room,
-        sender: sender,
-        recipient_id: recipientId,
-        message_id: messageId,
-    });
-
-    const reactionContainer = document.getElementById(`reaction-${messageId}`);
-    reactionContainer.textContent = ''; 
-}
-
-function getReactionSymbol(reactionType) {
-    switch (reactionType) {
-        case 'like': return '👍';
-        case 'dislike': return '👎';
-        case 'heart': return '❤️';
-        case 'smile': return '😊';
-        case 'sad': return '😢';
-        default: return '';
-    }
-}
-
-
-document.querySelectorAll('.message-item').forEach(function (messageElement) {
-    messageElement.addEventListener('mousedown', function (event) {
-        if (event.detail === 2) {
-            event.preventDefault();
+                    socket.emit('send_message', {
+                        room: room,
+                        sender: sender,
+                        recipient_id: recipientId,
+                        content: '',
+                        photo: photoDataUrl,
+                    });
+                };
+                reader.readAsDataURL(file);
+                setTimeout(scrollToBottom, 100);
+            } else {
+                alert('Please drop an image file!');
+            }
         }
     });
+    function toggleReactionMenu(messageId) {
+        const reactionMenu = document.getElementById(`reactions-${messageId}`);
+        const allReactionMenus = document.querySelectorAll('.reactions');
+        const messagesContainer = document.getElementById('messages');
+        const messageElement = document.querySelector(`.message-item[data-id="${messageId}"]`);
 
-    messageElement.addEventListener('dblclick', function () {
-        const messageId = messageElement.getAttribute('data-id');
-        const reactionContainer = document.getElementById(`reaction-${messageId}`);
-        
-        if (reactionContainer && reactionContainer.textContent.trim() !== '') {
-            removeReaction(messageId);
+        const currentUserId = document.getElementById('messages').dataset.sender;
+        const authorId = messageElement.getAttribute('data-author-id');
+
+        if (authorId === currentUserId) {
+            return;
+        }
+
+        allReactionMenus.forEach(function (menu) {
+            if (menu !== reactionMenu) {
+                menu.style.display = 'none';
+            }
+        });
+
+        if (reactionMenu.style.display === 'none' || reactionMenu.style.display === '') {
+            reactionMenu.style.display = 'block';
+
+            const rect = reactionMenu.getBoundingClientRect();
+            const containerRect = messagesContainer.getBoundingClientRect();
+
+            if (rect.bottom > containerRect.bottom) {
+                messagesContainer.scrollTop += rect.bottom - containerRect.bottom;
+            }
+
+            if (rect.top < containerRect.top) {
+                messagesContainer.scrollTop -= containerRect.top - rect.top;
+            }
         } else {
-            toggleReactionMenu(messageId);
-        }
-    });
-});
-
-
-document.querySelectorAll('.close-reactions').forEach(function (button) {
-    button.addEventListener('click', function () {
-        const messageId = button.getAttribute('data-message-id');
-        const reactionsMenu = document.getElementById(`reactions-${messageId}`);
-        reactionsMenu.style.display = 'none'; 
-    });
-});
-socket.on('receive_reaction', function (data) {
-    const messageElement = document.querySelector(`.message-item[data-id="${data.message_id}"]`);
-    if (messageElement) {
-        const reactionContainer = messageElement.querySelector('.message-reaction');
-        const sender = document.getElementById('messages').dataset.sender;
-        reactionContainer.textContent = getReactionSymbol(data.reaction_type);
-
-        const authorElement = messageElement.querySelector('.reaction-author');
-        if (authorElement) {
-            authorElement.textContent = `Reacted by: ${data.reaction_author}`;
-        }
-
-        const reactionAuthorId = messageElement.getAttribute('data-author-id');
-        
-        if (String(sender) !== String(data.sender)) {
-            socket.emit('mark_as_read', {
-                sender_id: data.sender,
-                reaction_author: reactionAuthorId
-            });
+            reactionMenu.style.display = 'none';
         }
     }
-});
 
-socket.on('remove_reaction', function (data) {
+    function sendReaction(messageId, reactionType) {
+        const room = document.getElementById('messages').dataset.room;
+        const sender = document.getElementById('messages').dataset.sender;
+        const recipientId = document.getElementById('messages').dataset.recipient;
 
-    const messageElement = document.querySelector(`.message-item[data-id="${data.message_id}"]`);
-    
-    if (messageElement) {
-        const reactionContainer = messageElement.querySelector('.message-reaction');
+        socket.emit('send_reaction', {
+            room: room,
+            sender: sender,
+            recipient_id: recipientId,
+            message_id: messageId,
+            reaction_type: reactionType,
+        });
+
+        const reactionContainer = document.getElementById(`reaction-${messageId}`);
+        reactionContainer.textContent = getReactionSymbol(reactionType);
+    }
+
+    function removeReaction(messageId) {
+        const room = document.getElementById('messages').dataset.room;
+        const sender = document.getElementById('messages').dataset.sender;
+        const recipientId = document.getElementById('messages').dataset.recipient;
+        const currentUserId = document.getElementById('messages').dataset.sender;
+
+        const messageElement = document.querySelector(`.message-item[data-id="${messageId}"]`);
+
+        let authorId = null;
+        if (messageElement) {
+            authorId = messageElement.getAttribute('data-author-id');
+        }
+        if (authorId === currentUserId) {
+            return;
+        }
+
+
+        socket.emit('remove_reaction', {
+            room: room,
+            sender: sender,
+            recipient_id: recipientId,
+            message_id: messageId,
+        });
+
+        const reactionContainer = document.getElementById(`reaction-${messageId}`);
         reactionContainer.textContent = '';
     }
-});
+
+    function getReactionSymbol(reactionType) {
+        switch (reactionType) {
+            case 'like': return '👍';
+            case 'dislike': return '👎';
+            case 'heart': return '❤️';
+            case 'smile': return '😊';
+            case 'sad': return '😢';
+            default: return '';
+        }
+    }
+
+
+    document.querySelectorAll('.message-item').forEach(function (messageElement) {
+        messageElement.addEventListener('mousedown', function (event) {
+            if (event.detail === 2) {
+                event.preventDefault();
+            }
+        });
+
+        messageElement.addEventListener('dblclick', function () {
+            const messageId = messageElement.getAttribute('data-id');
+            const reactionContainer = document.getElementById(`reaction-${messageId}`);
+
+            if (reactionContainer && reactionContainer.textContent.trim() !== '') {
+                removeReaction(messageId);
+            } else {
+                toggleReactionMenu(messageId);
+            }
+        });
+    });
+
+
+    document.querySelectorAll('.close-reactions').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const messageId = button.getAttribute('data-message-id');
+            const reactionsMenu = document.getElementById(`reactions-${messageId}`);
+            reactionsMenu.style.display = 'none';
+        });
+    });
+    socket.on('receive_reaction', function (data) {
+        const messageElement = document.querySelector(`.message-item[data-id="${data.message_id}"]`);
+        if (messageElement) {
+            const reactionContainer = messageElement.querySelector('.message-reaction');
+            const sender = document.getElementById('messages').dataset.sender;
+            reactionContainer.textContent = getReactionSymbol(data.reaction_type);
+
+            const authorElement = messageElement.querySelector('.reaction-author');
+            if (authorElement) {
+                authorElement.textContent = `Reacted by: ${data.reaction_author}`;
+            }
+
+            const reactionAuthorId = messageElement.getAttribute('data-author-id');
+
+            if (String(sender) !== String(data.sender)) {
+                socket.emit('mark_as_read', {
+                    sender_id: data.sender,
+                    reaction_author: reactionAuthorId
+                });
+            }
+        }
+    });
+
+    socket.on('remove_reaction', function (data) {
+
+        const messageElement = document.querySelector(`.message-item[data-id="${data.message_id}"]`);
+
+        if (messageElement) {
+            const reactionContainer = messageElement.querySelector('.message-reaction');
+            reactionContainer.textContent = '';
+        }
+    });
 });
