@@ -164,7 +164,11 @@ def unblock_user(username):
     else:
         flash(f'User {username} is not in your block list.', 'info')
 
+    if request.referrer and 'blocked_users' in request.referrer:
+        return redirect(url_for('auth.blocked_users'))
+
     return redirect(url_for('auth.user_profile', username=username))
+
 
 @auth_bp.route('/change_email', methods=['POST'])
 def change_email():
@@ -260,6 +264,19 @@ def user_profile(username):
         avatar_url=avatar_url,query=query, blocked_user_exists=blocked_user_exists
     )
 
+@auth_bp.route('/blocked_users', methods=['GET'])
+def blocked_users():
+    user_id = session.get('user_id')
+    
+    if not user_id:
+        flash('You must be logged in to view this page.', 'danger')
+        return redirect(url_for('auth.login'))
+
+    blocked_users = BlockedUser.query.filter_by(blocker_id=user_id).all()
+    
+    blocked_by_users = BlockedUser.query.filter_by(blocked_id=user_id).all()
+    
+    return render_template('auth/blocked_users.html', blocked_users=blocked_users, blocked_by_users=blocked_by_users)
 
 UPLOAD_FOLDER = 'app/static/uploads/avatars'  
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}

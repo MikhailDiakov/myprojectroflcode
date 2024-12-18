@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Blocked Users
+{% endblock %}
+
+{% block body %}
+<div class="blocked-users-page">
+    <h1 class="title">Blocked Users</h1>
+
+    <div class="blocked-section">
+        <h2 class="section-title">You have blocked:</h2>
+        {% if blocked_users %}
+        <ul class="user-list">
+            {% for block in blocked_users %}
+            <li class="user-item">
+                <span class="username">{{ block.blocked.username }}</span>
+                <form action="{{ url_for('auth.unblock_user', username=block.blocked.username) }}" method="POST"
+                    class="unblock-form">
+                    <button type="submit" class="btn btn-primary">Unblock</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="no-users-message">You haven't blocked anyone.</p>
+        {% endif %}
+    </div>
+
+    <div class="blocked-by-section">
+        <h2 class="section-title">Blocked by:</h2>
+        {% if blocked_by_users %}
+        <ul class="user-list">
+            {% for block in blocked_by_users %}
+            <li class="user-item">
+                <span class="username">{{ block.blocker.username }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="no-users-message">No one has blocked you.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
