@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     socket.on('block_notification', function (data) {
-        console.log(data.message)
         document.getElementById('message-input').style.display = 'none';
         document.getElementById('emoji-button').style.display = 'none';
         document.getElementById('photo-button').style.display = 'none';
@@ -410,6 +409,16 @@ document.addEventListener('DOMContentLoaded', async function () {
                 setTimeout(() => {
                     editableText.focus();
                 }, 100);
+
+                editableText.addEventListener('paste', function (event) {
+                    event.preventDefault();
+                    const text = (event.clipboardData || window.clipboardData).getData('text');
+                    document.execCommand('insertText', false, text);
+                });
+
+                editableText.addEventListener('drop', function (event) {
+                    event.preventDefault();
+                });
 
                 editableText.addEventListener('keydown', function (event) {
                     if (event.key === 'Enter') {

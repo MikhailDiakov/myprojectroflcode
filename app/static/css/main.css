@@ -528,10 +528,7 @@ header {
     height: 500px;
 }
 
-
-
 body.dark .message-container {
-
     margin: 0 auto;
     padding: 10px;
     background-color: #333;
