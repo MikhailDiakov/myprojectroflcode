@@ -365,15 +365,17 @@ document.addEventListener('DOMContentLoaded', async function () {
                         editedLabel = document.createElement('span');
                         editedLabel.classList.add('edited-label');
                         editedLabel.style.color = 'gray';
-                        editedLabel.style.marginLeft = '10px';
+                        editedLabel.style.marginLeft = '-12.5px';
+                        editedLabel.style.marginRight = '25px';
                         editedLabel.textContent = '(Edited)';
-                        messageWrapper.appendChild(editedLabel);
+                        messageWrapper.insertBefore(editedLabel, editButton);
                     } else {
                         console.log('Edited label already exists.');
                     }
                 } else {
                     console.error('Parent node for message text not found!');
                 }
+
 
                 editButton.innerHTML = '🖍️';
                 editButton.style.display = 'inline';
@@ -507,9 +509,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (messageTextElement) {
                 const safeContent = data.content;
                 const updatedContent = await createClickableLinks(safeContent);
-                console.log(safeContent)
-                console.log(updatedContent)
-
                 messageTextElement.innerHTML = updatedContent;
 
                 let editedLabel = messageElement.querySelector('.edited-label');
