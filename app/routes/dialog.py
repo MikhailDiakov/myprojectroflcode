@@ -264,6 +264,27 @@ def handle_edit_message(data):
             'edited': True
         }, room=room)
 
+        last_message = Message.query.filter(
+            ((Message.sender_id == message.sender_id) & (Message.recipient_id == message.recipient_id)) |
+            ((Message.sender_id == message.recipient_id) & (Message.recipient_id == message.sender_id))
+        ).order_by(Message.timestamp.desc()).first()
+
+        if last_message and last_message.id == message_id:
+            sender = User.query.get(message.sender_id)
+            recipient_id = message.recipient_id
+            unread_count = Message.query.filter_by(recipient_id=recipient_id, read=False).count()
+            
+            emit('update_last_message', {
+                'sender_id': message.sender_id,
+                'sender_username': sender.username,
+                'avatar': sender.avatar_url,
+                'recipient_id': str(recipient_id),
+                'content': escaped_content,
+                'reactions': False,
+                'timestamp': message.timestamp.strftime('%H:%M %d/%m'),
+                'unread_count': unread_count
+            }, broadcast=True)
+
 @socketio.on('mark_as_read')
 def handle_mark_as_read(data):
     user_id = session.get('user_id')
@@ -323,7 +344,6 @@ def handle_reaction(data):
     if reaction:
         reaction.reaction_type = data['reaction_type']
     else:
-
         reaction = Reaction(
             message_id=data['message_id'],
             reaction_type=data['reaction_type'],
@@ -388,4 +408,3 @@ def handle_remove_reaction(data):
     socketio.emit('remove_reaction', {
         'message_id': data['message_id']
     }, room=data['room'])
-
