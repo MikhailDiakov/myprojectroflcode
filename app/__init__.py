@@ -31,7 +31,7 @@ class Config:
     db.init_app(app)
     socketio.init_app(app)  
 
-    upload_folders = ['app/static/uploads/avatars', 'app/static/uploads/photos']
+    upload_folders = ['app/static/uploads/avatars', 'app/static/uploads/photos','app/static/uploads/documents']
 
     for folder in upload_folders:
         if not os.path.exists(folder):

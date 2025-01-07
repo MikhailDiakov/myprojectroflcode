@@ -32,6 +32,8 @@ function showToast(data) {
     toast.classList.add('toast-message');
     if (data.photo_url) {
         toast.textContent = `${data.sender_username}: Photo`;
+    } else if (data.document_url) {
+        toast.textContent = `${data.sender_username}: File`;
     } else {
         toast.textContent = `${data.sender_username}: ${data.content}`;
     }

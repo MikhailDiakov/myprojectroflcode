@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         document.getElementById('message-input').style.display = 'none';
         document.getElementById('emoji-button').style.display = 'none';
         document.getElementById('photo-button').style.display = 'none';
+        document.getElementById('document-button').style.display = 'none';
         document.getElementById('send-message-button').style.display = 'none';
 
         const editButtons = document.querySelectorAll('.edit-message');
@@ -314,9 +315,23 @@ document.addEventListener('DOMContentLoaded', async function () {
         const safeContent = escapeHTML(data.content);
         const clickableContent = await createClickableLinks(safeContent);
 
+        let documentContent = '';
+        if (data.document_url) {
+            documentContent = `
+                <div class="message-document">
+                    <span class="document-name">${data.document_name}</span>
+                    <span class="document-size">(${data.document_size} KB)</span>
+                    <a href="${data.document_url}" class="download-btn" download>
+                        <span class="file-icon">⬇️</span>
+                    </a>
+                </div>
+            `;
+        }
+
         const messageContent = `
         <span class="message-text">${clickableContent}</span>
         ${data.photo_url ? `<div class="message-photo"><img src="${data.photo_url}" class="photo" /></div>` : ''}
+        ${documentContent}
         <span class="message-time" style="right: 0; bottom: 0; position: absolute;">${data.timestamp}</span>
         <span class="message-reaction" id="reaction-${data.id}">
             <!-- Реакция будет отображаться здесь -->
@@ -335,11 +350,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             messageElement.classList.add('sent');
             const isLink = /https?:\/\/[^\s]+/.test(data.content);
             const hasPhoto = !!data.photo_url;
+            const hasDocument = !!data.document_url;
 
             messageElement.innerHTML = `
                 <strong>You:</strong> ${messageContent}
                 <span class="read-status">${data.read ? 'Read' : ''}</span>
-                <button class="edit-message" data-message-id="${data.id}" style="display: ${isLink || hasPhoto ? 'none' : 'inline'};">🖍️</button>
+                <button class="edit-message" data-message-id="${data.id}" style="display: ${isLink || hasPhoto || hasDocument ? 'none' : 'inline'};">🖍️</button>
                 <button class="delete-message" data-message-id="${data.id}">🗑️</button>
             `;
 
@@ -500,6 +516,10 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (messagePhotoElement) {
                 messagePhotoElement.remove();
             }
+            const messageDocumentElement = messageElement.querySelector('.message-document');
+            if (messageDocumentElement) {
+                messageDocumentElement.remove();
+            }
 
             return;
         }
@@ -609,8 +629,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     });
 
-
-
     setTimeout(function () {
         messageInput.focus();
     }, 100);
@@ -654,9 +672,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('emoji-button').addEventListener('click', function () {
         const emojiMenu = document.getElementById('emoji-menu');
         const photoMenu = document.getElementById('photo-menu');
+        const documentMenu = document.getElementById('document-menu');
 
         emojiMenu.style.display = emojiMenu.style.display === 'none' || emojiMenu.style.display === '' ? 'block' : 'none';
         photoMenu.style.display = 'none';
+        documentMenu.style.display = 'none';
     });
 
     document.querySelectorAll('.emoji').forEach(function (button) {
@@ -671,13 +691,78 @@ document.addEventListener('DOMContentLoaded', async function () {
         document.getElementById('emoji-menu').style.display = 'none';
         messageInput.focus()
     });
+    document.getElementById('document-button').addEventListener('click', function () {
+        const documentMenu = document.getElementById('document-menu');
+        const emojiMenu = document.getElementById('emoji-menu');
+        const photoMenu = document.getElementById('photo-menu');
+
+        documentMenu.style.display = documentMenu.style.display === 'none' || documentMenu.style.display === '' ? 'block' : 'none';
+        emojiMenu.style.display = 'none';
+        photoMenu.style.display = 'none';
+    });
+
+    document.getElementById('close-document-menu').addEventListener('click', function () {
+        document.getElementById('document-menu').style.display = 'none';
+    });
+
+    document.getElementById('document-upload').addEventListener('change', function () {
+        const files = this.files;
+        const fileNames = Array.from(files).map(file => file.name).join(', ');
+        document.getElementById('document-name').textContent = fileNames || 'No files selected';
+    });
+
+    document.getElementById('send-document').addEventListener('click', function () {
+        const documentInput = document.getElementById('document-upload');
+        const files = documentInput.files;
+        console.log(files)
+
+        if (files.length > 0) {
+            let index = 0;
+
+            const sendNextFile = () => {
+                if (index < files.length) {
+                    const file = files[index];
+                    const reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        const documentDataUrl = e.target.result;
+
+                        socket.emit('send_message', {
+                            room: room,
+                            sender: sender,
+                            recipient_id: recipientId,
+                            content: '',
+                            document: documentDataUrl,
+                            document_name: file.name
+                        });
+
+                        index++;
+                        setTimeout(sendNextFile, 100);
+                    };
+
+                    reader.readAsDataURL(file);
+                } else {
+                    document.getElementById('document-menu').style.display = 'none';
+                    documentInput.value = '';
+                    document.getElementById('document-name').textContent = 'No files selected';
+                    setTimeout(scrollToBottom, 100);
+                }
+            };
+
+            sendNextFile();
+        } else {
+            alert('Please select a document to send.');
+        }
+    });
 
     document.getElementById('photo-button').addEventListener('click', function () {
         const photoMenu = document.getElementById('photo-menu');
         const emojiMenu = document.getElementById('emoji-menu');
+        const documentMenu = document.getElementById('document-menu');
 
         photoMenu.style.display = photoMenu.style.display === 'none' || photoMenu.style.display === '' ? 'block' : 'none';
         emojiMenu.style.display = 'none';
+        documentMenu.style.display = 'none';
     });
 
     document.getElementById('send-photo').addEventListener('click', function () {
@@ -753,6 +838,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     setTimeout(scrollToBottom, 100);
                 };
                 reader.readAsDataURL(file);
+                setTimeout(scrollToBottom, 100);
                 break;
             }
         }

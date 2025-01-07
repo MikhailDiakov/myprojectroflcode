@@ -31,6 +31,19 @@ Chat with {{ recipient.username }}
                     alt="Message photo" class="photo" />
             </div>
             {% endif %}
+            {% if message.document_url %}
+            <div class="message-document">
+                <span class="document-name">
+                    {{ message.document_name }}
+                </span>
+                <span class="document-size">
+                    ({{ message.document_size }} KB)
+                </span>
+                <a href="{{ message.document_url }}" class="download-btn" download>
+                    <span class="file-icon">⬇️</span>
+                </a>
+            </div>
+            {% endif %}
         </span>
 
         <span class="message-reaction" id="reaction-{{ message.id }}">
@@ -61,7 +74,8 @@ Chat with {{ recipient.username }}
         {% set is_link = message.content is string and (message.content.startswith('http://') or
         message.content.startswith('https://') or 'www.' in message.content) %}
         {% set has_photo = message.photo_url is not none and message.photo_url != '' %}
-        <button class="edit-message {% if is_link or has_photo %}hidden{% else %}visible{% endif %}"
+        {% set has_document = message.document_url is not none and message.document_url != '' %}
+        <button class="edit-message {% if is_link or has_photo or has_document %}hidden{% else %}visible{% endif %}"
             data-message-id="{{ message.id }}">🖍️</button>
         <button class="delete-message" data-message-id="{{ message.id }}">🗑️</button>
         {% endif %}
@@ -78,8 +92,9 @@ Chat with {{ recipient.username }}
         required></textarea>
 
     <div class="button-container">
-        <button id="emoji-button" type="button" class="chat-button">😊</button>
+        <button id="document-button" type="button" class="chat-button">📄</button>
         <button id="photo-button" type="button" class="chat-button">📷</button>
+        <button id="emoji-button" type="button" class="chat-button">😊</button>
         <button id="send-message-button" type="submit" class="btn btn-primary">Send</button>
     </div>
 </form>
@@ -108,6 +123,18 @@ Chat with {{ recipient.username }}
 
     <p id="file-name">No files selected</p>
     <button id="send-photo" type="button">Send Photos</button>
+</div>
+
+<div id="document-menu" class="document-menu" style="display: none;">
+    <button id="close-document-menu" type="button" class="close-btn">×</button>
+
+    <label for="document-upload" class="document-upload-label">
+        Choose documents
+        <input type="file" id="document-upload" accept="*/*" multiple />
+    </label>
+
+    <p id="document-name">No files selected</p>
+    <button id="send-document" type="button">Send Documents</button>
 </div>
 
 <script>

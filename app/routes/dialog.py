@@ -148,6 +148,26 @@ def handle_disconnect():
             del active_users[user_id]
 
 
+def save_photo(photo_data, sender_id):
+    img_data = base64.b64decode(photo_data.split(',')[1])
+    image = Image.open(BytesIO(img_data))
+    filename = f'{secure_filename(str(sender_id))}_{datetime.utcnow().strftime("%Y%m%d%H%M%S%f")}_{random.randint(1000, 9999)}.png'
+    file_path = os.path.join('app/static/uploads/photos', filename)
+    image.save(file_path)
+    return f'/static/uploads/photos/{filename}'
+
+def save_document(document_data, document_name, sender_id):
+    file_data = base64.b64decode(document_data.split(',')[1])
+    file_extension = os.path.splitext(document_name)[1]
+    filename = f'{secure_filename(str(sender_id))}_{datetime.utcnow().strftime("%Y%m%d%H%M%S%f")}_{random.randint(1000, 9999)}{file_extension}'
+    file_path = os.path.join('app/static/uploads/documents', filename)
+
+    with open(file_path, 'wb') as f:
+        f.write(file_data)
+
+    document_size = os.path.getsize(file_path) / 1024
+    return f'/static/uploads/documents/{filename}', document_name, round(document_size, 2)
+
 @socketio.on('send_message')
 def handle_send_message(data):
     room = data['room']
@@ -155,19 +175,22 @@ def handle_send_message(data):
     sender_id = session.get('user_id')
     recipient_id = data.get('recipient_id')
 
-    photo_data = data.get('photo')  
+    photo_data = data.get('photo')
+    document_data = data.get('document')
+    document_name = data.get('document_name')
+    
     photo_url = None
+    document_url = None
+    document_name_db = None
+    document_size = None
 
     if photo_data:
-        img_data = base64.b64decode(photo_data.split(',')[1]) 
-        image = Image.open(BytesIO(img_data))
-        
-        filename = f'{secure_filename(str(sender_id))}_{datetime.utcnow().strftime("%Y%m%d%H%M%S%f")}_{random.randint(1000, 9999)}.png'
-        file_path = os.path.join('app/static/uploads/photos', filename)
-        image.save(file_path)
-        
-        photo_url = f'/static/uploads/photos/{filename}' 
+        photo_url = save_photo(photo_data, sender_id)
         content = ' '
+
+    if document_data:
+        document_url, document_name_db, document_size = save_document(document_data, document_name, sender_id)
+        content = ' '
 
     if sender_id and recipient_id:
         message = Message(
@@ -175,6 +198,9 @@ def handle_send_message(data):
             recipient_id=recipient_id,
             content=content,
             photo_url=photo_url,
+            document_url=document_url,
+            document_name=document_name_db,
+            document_size=document_size,
             timestamp=datetime.utcnow(),
             read=False
         )
@@ -192,12 +218,15 @@ def handle_send_message(data):
         ).count()
 
         emit('receive_message', {
-            'id': message.id, 
+            'id': message.id,
             'sender': sender_id,
             'sender_username': sender_username,
             'recipient_username': recipient_username,
             'content': content,
-            'photo_url': photo_url,  
+            'photo_url': photo_url,
+            'document_url': document_url,
+            'document_name': document_name_db,
+            'document_size': document_size,
             'timestamp': message.timestamp.strftime('%H:%M %d/%m'),
             'read': False
         }, room=room)
@@ -208,7 +237,10 @@ def handle_send_message(data):
             'avatar': avatar_url,
             'recipient_id': recipient_id,
             'content': content,
-            'photo_url': photo_url, 
+            'photo_url': photo_url,
+            'document_url': document_url,
+            'document_name': document_name_db,
+            'document_size': document_size,
             'timestamp': message.timestamp.strftime('%H:%M %d/%m'),
             'unread_count': unread_count
         }, broadcast=True)
@@ -218,6 +250,7 @@ def handle_send_message(data):
             read=False
         ).count()
         emit('update_unread_count', {'unread_count_all': unread_count_all, 'recipient_id': recipient_id}, broadcast=True)
+
 
 @socketio.on('delete_message')
 def handle_delete_message(data):
@@ -230,15 +263,16 @@ def handle_delete_message(data):
         message.content = "DELETED MESSAGE"
         message.deleted = True
         message.photo_url = None
+        message.document_url = None
+        message.document_name = None
+        message.document_size = None
         db.session.commit()
 
         room = f"chat_{min(message.sender_id, message.recipient_id)}_{max(message.sender_id, message.recipient_id)}"
         
         emit('update_message', {
             'id': message_id,
-            'content': "DELETED",
             'deleted': True,
-            'photo_url': None
         }, room=room)
 
 

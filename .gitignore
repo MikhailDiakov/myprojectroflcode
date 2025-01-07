@@ -5,6 +5,7 @@ env/
 __pycache__/
 
 instance/
+app/static/uploads/
 config.py
 *.db
 *.sqlite

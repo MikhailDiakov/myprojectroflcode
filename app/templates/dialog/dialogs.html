@@ -34,15 +34,22 @@ Dialogs
                 {% else %}
                 {{ '' }}
                 {% endif %}
-                {% if last_messages[user.id].content and last_messages[user.id].content != ' ' %}
-                {{ last_messages[user.id].content }}
+                {% if last_messages[user.id].content %}
+                {% if last_messages[user.id].content == ' ' %}
+                <a>Photo</a>
+                {% elif last_messages[user.id].content == ' ' %}
+                <a>File</a>
                 {% else %}
-                <em>Photo</em>
+                {{ last_messages[user.id].content }}
+                {% endif %}
+                {% else %}
+                No content.
                 {% endif %}
                 {% else %}
                 No messages yet.
                 {% endif %}
             </span>
+
 
 
             <span class="message-time">
@@ -91,7 +98,6 @@ Dialogs
 
 
         socket.on('update_last_message', function (data) {
-            console.log(data)
             if (data.recipient_id !== currentUserId) return;
 
             const dialogList = document.querySelector('.dialog-list');
@@ -99,9 +105,12 @@ Dialogs
 
             const lastMessageContent = data.photo_url
                 ? 'Photo'
-                : data.content && data.content.trim() !== ''
-                    ? data.content
-                    : 'No messages yet';
+                : data.document_url
+                    ? 'File'
+                    : data.content && data.content.trim() !== ''
+                        ? data.content
+                        : 'No messages yet';
+
 
 
             if (!dialogItem) {
