@@ -102,14 +102,13 @@ Chat with {{ recipient.username }}
     <button id="close-photo-menu" type="button" class="close-btn">×</button>
 
     <label for="photo-upload" class="photo-upload-label">
-        Choose a photo
-        <input type="file" id="photo-upload" accept="image/*" />
+        Choose photos
+        <input type="file" id="photo-upload" accept="image/*" multiple />
     </label>
 
-    <p id="file-name">No file selected</p>
-    <button id="send-photo" type="button">Send Photo</button>
+    <p id="file-name">No files selected</p>
+    <button id="send-photo" type="button">Send Photos</button>
 </div>
-
 
 <script>
     const apiKey = "{{ api_key }}";

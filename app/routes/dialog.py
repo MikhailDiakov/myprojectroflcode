@@ -11,6 +11,7 @@ import os
 from werkzeug.utils import secure_filename
 from instance.config import Config
 from html import escape
+import random
 
 user_last_activity = {}
 
@@ -161,7 +162,7 @@ def handle_send_message(data):
         img_data = base64.b64decode(photo_data.split(',')[1]) 
         image = Image.open(BytesIO(img_data))
         
-        filename = f'{secure_filename(str(sender_id))}_{datetime.utcnow().strftime("%Y%m%d%H%M%S")}.png'
+        filename = f'{secure_filename(str(sender_id))}_{datetime.utcnow().strftime("%Y%m%d%H%M%S%f")}_{random.randint(1000, 9999)}.png'
         file_path = os.path.join('app/static/uploads/photos', filename)
         image.save(file_path)
         

@@ -682,33 +682,50 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     document.getElementById('send-photo').addEventListener('click', function () {
         const photoInput = document.getElementById('photo-upload');
-        const file = photoInput.files[0];
+        const files = photoInput.files;
 
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const photoDataUrl = e.target.result;
+        if (files.length > 0) {
+            let index = 0;
 
-                socket.emit('send_message', {
-                    room: room,
-                    sender: sender,
-                    recipient_id: recipientId,
-                    content: '',
-                    photo: photoDataUrl,
-                });
-                document.getElementById('photo-menu').style.display = 'none';
-                photoInput.value = '';
-                document.getElementById('file-name').textContent = 'No file selected';
-                setTimeout(scrollToBottom, 100);
+            const sendNextFile = () => {
+                if (index < files.length) {
+                    const file = files[index];
+                    const reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        const photoDataUrl = e.target.result;
+
+                        socket.emit('send_message', {
+                            room: room,
+                            sender: sender,
+                            recipient_id: recipientId,
+                            content: '',
+                            photo: photoDataUrl,
+                        });
+
+                        index++;
+                        setTimeout(sendNextFile, 100);
+                    };
+
+                    reader.readAsDataURL(file);
+                } else {
+                    document.getElementById('photo-menu').style.display = 'none';
+                    photoInput.value = '';
+                    document.getElementById('file-name').textContent = 'No file selected';
+                    setTimeout(scrollToBottom, 100);
+                }
             };
-            reader.readAsDataURL(file);
+
+            sendNextFile();
         } else {
             alert('Please select an image to send.');
         }
     });
+
     document.getElementById('photo-upload').addEventListener('change', function () {
-        const fileName = this.files[0] ? this.files[0].name : 'No file selected';
-        document.getElementById('file-name').textContent = fileName;
+        const files = this.files;
+        const fileNames = Array.from(files).map(file => file.name).join(', ');
+        document.getElementById('file-name').textContent = fileNames || 'No files selected';
     });
     document.getElementById('close-photo-menu').addEventListener('click', function () {
         document.getElementById('photo-menu').style.display = 'none';

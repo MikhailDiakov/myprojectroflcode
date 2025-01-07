@@ -1,12 +1,12 @@
 document.addEventListener('DOMContentLoaded', function () {
     const socket = io();
 
-    const currentUserId = document.body.dataset.sender; 
+    const currentUserId = document.body.dataset.sender;
 
     const unreadCountElement = document.getElementById('unread-count');
     const cachedUnreadCount = localStorage.getItem('unreadCount');
     if (unreadCountElement && cachedUnreadCount !== null) {
-        unreadCountElement.textContent = cachedUnreadCount; 
+        unreadCountElement.textContent = cachedUnreadCount;
     }
 
     socket.on('update_unread_count', function (data) {
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         showToast(data);
     });
-    
+
 });
 
 function showToast(data) {
@@ -30,7 +30,11 @@ function showToast(data) {
 
     const toast = document.createElement('div');
     toast.classList.add('toast-message');
-    toast.textContent = `${data.sender_username}: ${data.content}`;
+    if (data.photo_url) {
+        toast.textContent = `${data.sender_username}: Photo`;
+    } else {
+        toast.textContent = `${data.sender_username}: ${data.content}`;
+    }
 
     toastContainer.appendChild(toast);
 
