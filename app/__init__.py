@@ -22,6 +22,9 @@ class Config:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///iambored.db' 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     LINKPREVIEW_API_KEY = '7c80729903a4c7a5b55dd4beb745f556'  #If you wanna change to your API key https://my.linkpreview.net/
+    smtp_username = "invalid" #Put your e-mail in here
+    smtp_password = "invalid" #Put your e-mail app-password in here
+    salt="password-reset-salt" #You can also change the salt to reset the token.
             """)
 
     app.config.from_object('instance.config.Config')

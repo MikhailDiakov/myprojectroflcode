@@ -1278,3 +1278,27 @@ body.light .document-menu {
     text-decoration: none;
     transition: background-color 0.3s ease;
 }
+
+.forget-password {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.forget-password a {
+    font-size: 16px;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.forget-password a:hover {
+    color: #0056b3 !important;
+    text-decoration: underline;
+}
+
+body.dark .forget-password a {
+    color: white;
+}
+
+body.light .forget-password a {
+    color: #333;
+}

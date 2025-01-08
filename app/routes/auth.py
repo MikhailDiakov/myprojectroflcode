@@ -8,6 +8,11 @@ from flask_socketio import emit
 import uuid
 from datetime import datetime, timedelta
 import hashlib
+from itsdangerous import URLSafeTimedSerializer
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from instance.config import Config
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -106,6 +111,112 @@ def login():
         return render_template('auth/login.html', error_message=error_message)
 
     return render_template('auth/login.html')
+
+def send_reset_email(to_email, reset_link):
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587
+    smtp_username = Config.smtp_username
+    smtp_password = Config.smtp_password
+
+    subject = "Password Reset Request"
+    body = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <h2 style="color: #4CAF50;">Password Reset Request</h2>
+                <p>Hi,</p>
+                <p>We received a request to reset your password. Please click the button below to reset it:</p>
+                <p>
+                    <a href="{reset_link}" 
+                    style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: #fff; text-decoration: none; border-radius: 5px;">
+                    Reset Password
+                    </a>
+                </p>
+                <p><strong>Note:</strong> This link is valid for <strong>1 hour</strong>. If you did not request this, you can safely ignore this email.</p>
+                <p>Thank you!</p>
+                <hr style="border: none; border-top: 1px solid #ddd;">
+                <footer style="font-size: 0.9em; color: #666;">
+                    <p>If you have any questions, please contact our support team.</p>
+                </footer>
+            </body>
+        </html>
+    """
+
+
+    msg = MIMEMultipart()
+    msg['From'] = smtp_username
+    msg['To'] = to_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'html'))
+
+    try:
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(smtp_username, smtp_password)
+        server.send_message(msg)
+        server.quit()
+        print("Reset email sent successfully.")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+def generate_reset_token(user_id):
+    serializer = URLSafeTimedSerializer(Config.SECRET_KEY)
+    return serializer.dumps(user_id, salt=Config.salt)
+
+def confirm_reset_token(token, expiration=3600):
+    serializer = URLSafeTimedSerializer(Config.SECRET_KEY)
+    try:
+        user_id = serializer.loads(token, salt=Config.salt, max_age=expiration)
+    except Exception:
+        return None
+    return user_id
+
+@auth_bp.route('/forget-password', methods=['GET', 'POST'])
+def forget_password():
+    if request.method == 'POST':
+        email = request.form['email']
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            reset_token = generate_reset_token(user.id)
+            reset_link = url_for('auth.reset_password', token=reset_token, _external=True)
+
+            send_reset_email(email, reset_link)
+
+            success_message = 'Check your email for instructions to reset your password.'
+            return render_template('auth/forget_password.html', success_message=success_message)
+        else:
+            error_message = 'Invalid email. Please check and try again.'
+            return render_template('auth/forget_password.html', error_message=error_message)
+
+    return render_template('auth/forget_password.html')
+
+@auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    user_id = confirm_reset_token(token)
+    if not user_id:
+        error_message = "The reset link is invalid or has expired."
+        return render_template('auth/reset_password.html', error_message=error_message)
+
+    if request.method == 'POST':
+        new_password = request.form['password']
+        confirm_password = request.form['confirm_password']
+
+        if len(new_password) < 8 or len(new_password) > 20:
+            error_message = "Password must be between 8 and 20 characters."
+            return render_template('auth/reset_password.html', error_message=error_message)
+
+        if new_password != confirm_password:
+            error_message = "Passwords do not match."
+            return render_template('auth/reset_password.html', error_message=error_message)
+
+        user = User.query.get(user_id)
+        if user:
+            user.set_password(new_password)
+            db.session.commit()
+            success_message = "Your password has been reset successfully. You can now log in."
+            return render_template('auth/reset_password.html', success_message=success_message)
+
+    return render_template('auth/reset_password.html')
 
 @auth_bp.before_app_request
 def auto_login():
